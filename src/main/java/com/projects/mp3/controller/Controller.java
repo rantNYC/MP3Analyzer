@@ -3,11 +3,18 @@ package com.projects.mp3.controller;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.projects.mp3.controller.engine.Engine;
 import com.projects.mp3.controller.engine.EngineUtilities;
-import com.projects.mp3.controller.engine.MP3Decoder;
+import com.projects.mp3.controller.engine.EngineWorker;
+import com.projects.mp3.controller.engine.ViewerListener;
 import com.projects.mp3.controller.popup.*;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.model.Actions;
@@ -31,31 +38,38 @@ public class Controller {
 	//TODO: Move thread to new class
 	//TODO: Signal to stop from user
 	//TODO: Play songs from GUI
+	//TODO: Implement logging to log tab
 	
 	private MySQLDriver dbDriver;
 	private Engine engine;
+	private ExecutorService service = Executors.newFixedThreadPool(5, new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+            Thread t = Executors.defaultThreadFactory().newThread(r);
+            t.setName("SearchMP3 " + threadNum.incrementAndGet());
+            t.setDaemon(true);
+            return t;
+        }
+    });
+	private BlockingQueue<MP3Info> queue = new LinkedBlockingQueue<MP3Info>();
+	private AtomicInteger threadNum = new AtomicInteger(0);
 	
 	private final ObservableList<String> actions =FXCollections.observableArrayList(
 			"Upload MP3 to DB", 
 			"Songs in DB",
 			"MP3 info in DB",
 			"Generate Report");
-
 	
 	@FXML
 	ComboBox<String> actionsBox;
-
 	
 	@FXML
 	TextField dbConnectionString;
-
 	
 	@FXML
 	TextField dbUsername;
 
 	@FXML
 	PasswordField dbPassword;
-
 
 	@FXML
 	TextField rootFolder;
@@ -65,7 +79,6 @@ public class Controller {
 
 	@FXML	
 	Button selectFolderButton;
-
 	
 	@FXML
 	Button searchMP3Button;
@@ -75,7 +88,6 @@ public class Controller {
 	
 	@FXML
 	TableView<MP3Info> rootTable;
-
 	
 	@FXML
 	Label statusLabel;
@@ -87,9 +99,10 @@ public class Controller {
 	public void initialize() {
 		actionsBox.setItems(actions);
 		getMP3InfoColumns();
+		//TODO: Change
+		service.execute(new ViewerListener(rootTable, queue));
 	}
 	
-
 	@FXML
 	public void connectToDB() throws SQLException {
 		//		dbDriver = new MySQLDriver();
@@ -131,7 +144,6 @@ public class Controller {
 		}
 
 	}
-
 	
 	@FXML
 	public void searchMP3Files() throws Exception {
@@ -145,18 +157,9 @@ public class Controller {
 		File path = new File(rootPath);
 		if(path.exists() && path.isDirectory()) {
 			engine = new Engine(path);
-			List<File> mp3Files = engine.getMP3Files();
-			if(mp3Files.size() == 0) {
-				PopupMessageInfo popup = new PopupMessageInfo(null);
-				popup.displayPopUp("Root Folder", "Folder Empty", "No mp3 files found");
-			}
+			EngineWorker worker = new EngineWorker("SearchMP3 " + threadNum.get(), engine.getMP3Files(), queue);
+			service.execute(worker);
 			
-			for(File file : mp3Files) {
-				//TODO: Handle millions of rows
-				MP3Decoder decoder = new MP3Decoder(file.getAbsolutePath());
-				MP3Info info = decoder.decodeInformation();
-				rootTable.getItems().add(info);
-			}
 		}else {
 			PopupMessageError popup = new PopupMessageError(null);
 			popup.displayPopUp("Root Folder", "Folder Error", "Folder does not exists");
@@ -207,7 +210,6 @@ public class Controller {
 		}
 	}
 	
-
 	@FXML
 	public void chooseRootFolder() {
 		DirectoryChooser dc = new DirectoryChooser();
@@ -229,7 +231,6 @@ public class Controller {
 		}
 	}
 	
-
 	private void disposeDBConnection() {
 		try {
 			dbDriver.closeConnection();
@@ -243,7 +244,6 @@ public class Controller {
 		}
 	}
 	
-
 	private void getMP3InfoColumns(){
 		for(Field field : MP3Info.class.getDeclaredFields()) {
 			MP3Annotation value = field.getAnnotation(MP3Annotation.class);

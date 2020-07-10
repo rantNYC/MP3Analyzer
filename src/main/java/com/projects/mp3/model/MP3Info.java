@@ -81,4 +81,35 @@ public class MP3Info {
 		return "MP3Info [songName=" + songName + ", artistName=" + artistName + "]";
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((artistName == null) ? 0 : artistName.hashCode());
+		result = prime * result + ((songName == null) ? 0 : songName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		MP3Info other = (MP3Info) obj;
+		if (artistName == null) {
+			if (other.artistName != null)
+				return false;
+		} else if (!artistName.equals(other.artistName))
+			return false;
+		if (songName == null) {
+			if (other.songName != null)
+				return false;
+		} else if (!songName.equals(other.songName))
+			return false;
+		return true;
+	}
+
 }

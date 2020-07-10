@@ -2,7 +2,6 @@ package com.projects.mp3.controller.engine;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -40,6 +39,7 @@ public class Engine {
 	}
 	
 	private void generateMP3Files() {
+		//TODO: Deal with more formats
 		mp3Files = (List<File>) FileUtils.listFiles(dir, new RegexFileFilter(".+\\.mp3"), DirectoryFileFilter.DIRECTORY);
 	}
 }

@@ -13,6 +13,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import com.projects.mp3.model.MP3Info;
 
+//TODO: Make abstract and deal with multiple decoders
 public class MP3Decoder {
 
 	File mp3Path;
