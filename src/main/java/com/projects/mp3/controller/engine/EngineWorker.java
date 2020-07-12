@@ -2,12 +2,15 @@ package com.projects.mp3.controller.engine;
 
 import java.io.File;
 import java.util.*	;
-import java.util.concurrent.BlockingQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.projects.mp3.model.MP3Info;
 
 public class EngineWorker extends NotifyingWorker{
 
+	private static final Logger log = LoggerFactory.getLogger(EngineWorker.class);
+	
 	private final String workerName;
 	private final List<File> mp3Files;
 //	private final Engine engine;
@@ -23,7 +26,7 @@ public class EngineWorker extends NotifyingWorker{
 
 	@Override
 	public void execute() {
-		EngineUtilities.printConsole("Executing thread:" + workerName);
+		log.info("Executing thread: " + workerName);
 		for(File file : mp3Files) {
 			if(isInterrupted || Thread.currentThread().isInterrupted()) {
 				return;
@@ -35,13 +38,8 @@ public class EngineWorker extends NotifyingWorker{
 				info = decoder.decodeInformation();
 				notifyNewDataThread(info);
 			} catch (Exception e) {
-				// TODO change this
-				e.printStackTrace();
+				log.error("Error decoding: " + file, e);
 			}
-			//TODO:log it contains object
-//			if(info != null && !queue.contains(info)) {
-//				queue.add(info);
-//			}
 		}
 	}
 	

@@ -78,7 +78,7 @@ public class MP3Info {
 
 	@Override
 	public String toString() {
-		return "MP3Info [songName=" + songName + ", artistName=" + artistName + "]";
+		return "MP3Info [songName=" + songName + ", artistName=" + artistName + ", path=" + path + "]";
 	}
 
 	@Override

@@ -3,14 +3,13 @@ package com.projects.mp3.controller;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.projects.mp3.controller.engine.*;
 import com.projects.mp3.controller.popup.*;
@@ -19,6 +18,7 @@ import com.projects.mp3.model.Actions;
 import com.projects.mp3.model.DBStatus;
 import com.projects.mp3.model.MP3Annotation;
 import com.projects.mp3.model.MP3Info;
+import com.projects.mp3.view.TextAreaAppender;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,13 +30,8 @@ import javafx.stage.DirectoryChooser;
 
 public class Controller {
 
-
-	//TODO: Store values in engine?
-	//TODO: Avoid duplicates?
-	//TODO: Move thread to new class
-	//TODO: Signal to stop from user
+	private static Logger log = LoggerFactory.getLogger(Controller.class);
 	//TODO: Play songs from GUI
-	//TODO: Implement logging to log tab
 	
 	private MySQLDriver dbDriver;
 	private Engine engine;
@@ -44,7 +39,9 @@ public class Controller {
 	private ExecutorService service = Executors.newFixedThreadPool(10, guiFactory);
 	private AtomicInteger threadNum = new AtomicInteger(0);
 	
-	private final ObservableList<String> actions =FXCollections.observableArrayList(
+	private ObservableList<String> logger = FXCollections.observableArrayList();
+	
+	private final ObservableList<String> actions = FXCollections.observableArrayList(
 			"Upload MP3 to DB", 
 			"Songs in DB",
 			"MP3 info in DB",
@@ -84,6 +81,9 @@ public class Controller {
 	TableView<MP3Info> rootTable;
 	
 	@FXML
+	ListView<String> logView;
+	
+	@FXML
 	Label statusLabel;
 
 	@FXML
@@ -92,8 +92,11 @@ public class Controller {
 	@FXML
 	public void initialize() {
 		//TODO: Move database login to another window before accessing this one
+		log.info("Initializing GUI...");
 		actionsBox.setItems(actions);
 		getMP3InfoColumns();
+		logView.setItems(logger);
+		TextAreaAppender.setTextArea(logger);
 	}
 	
 	@FXML
@@ -187,8 +190,11 @@ public class Controller {
 			case Upload:
 				uploadToDB();
 			case GetSongs:
+				//TODO: Add functionality
 			case GetMP3:
+				//TODO: Add functionality
 			case GenerateReport:
+				//TODO: Add functionality
 				throw new UnsupportedOperationException("Action not yet implemented");
 			default:
 				//Shouldn't be here
@@ -197,8 +203,10 @@ public class Controller {
 	}	
 
 	@FXML
-	public void stopAction() {
-		List<Runnable> threads = service.shutdownNow();
+	public void stopAction() throws InterruptedException {
+		service.shutdownNow();
+		service.awaitTermination(5, TimeUnit.SECONDS);
+		service = Executors.newFixedThreadPool(10, guiFactory);
 	}
 	
 	@FXML
@@ -244,12 +252,11 @@ public class Controller {
 		}
 	}	
 
-	@FXML
 	private void uploadToDB() {
 		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
 			PopupMessageWarning popUp = new PopupMessageWarning(null);
 			popUp.displayPopUp("DB Warning", "DB Connection", 
-					 "Please connect to the database befero running an action");
+					 "Please connect to the database before running this action");
 		}
 	}
 }

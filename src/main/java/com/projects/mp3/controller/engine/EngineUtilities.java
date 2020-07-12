@@ -7,9 +7,9 @@ public class EngineUtilities {
 		
 	private EngineUtilities() {}
 	
-	public static void printConsole(String message) {
-		System.out.println(message);
-	}
+//	public static void printConsole(String message) {
+//		System.out.println(message);
+//	}
 	
 	public static boolean isNullorEmpty(String s) {
 		return s == null || s.isEmpty() || s.isBlank();

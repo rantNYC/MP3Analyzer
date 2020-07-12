@@ -1,7 +1,6 @@
 package com.projects.mp3.controller.engine;
 
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import com.projects.mp3.model.MP3Info;
