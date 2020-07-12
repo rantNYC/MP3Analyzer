@@ -22,7 +22,7 @@ public abstract class ListenerWoker implements ThreadListener, Runnable {
 		worker.shutdown();
 	}
 	
-	public abstract String onNewData(MP3Info info);
+	public abstract void onNewData(MP3Info info);
 
 	public abstract void onThreadFinished(NotifyingWorker notifyingThread);
 

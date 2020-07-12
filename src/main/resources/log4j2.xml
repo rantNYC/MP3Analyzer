@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<Configuration status="INFO">  
+	<Properties>
+        <Property name="LOG_PATTERN">[%p] %d %C{1} %M - %m</Property>
+    </Properties>
+    <Appenders>
+    	<File name="GUILog" fileName="logs/MP3GUI.log" append="false">
+      		<PatternLayout pattern="${LOG_PATTERN}%n" />
+      	</File>
+        <TextAreaAppender name="JavaFXLogger">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </TextAreaAppender>
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${LOG_PATTERN}%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="all">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="GUILog"/>
+            <AppenderRef ref="JavaFXLogger" />
+        </Root>
+    </Loggers>
+</Configuration>  

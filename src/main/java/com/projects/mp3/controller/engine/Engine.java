@@ -7,9 +7,13 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.RegexFileFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Engine {
 
+	private static final Logger log = LoggerFactory.getLogger(Engine.class);
+	
 	File dir;
 	List<File> mp3Files;
 	
@@ -40,6 +44,7 @@ public class Engine {
 	
 	private void generateMP3Files() {
 		//TODO: Deal with more formats
+		log.info("Processing: " + dir);
 		mp3Files = (List<File>) FileUtils.listFiles(dir, new RegexFileFilter(".+\\.mp3"), DirectoryFileFilter.DIRECTORY);
 	}
 }

@@ -1,14 +1,21 @@
 package com.projects.mp3.controller.engine;
 
 import java.util.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.projects.mp3.model.MP3Info;
 
 import javafx.scene.control.*;
 
 public class SearchMP3Listener extends ListenerWoker {
 
+	private static final Logger log = LoggerFactory.getLogger(SearchMP3Listener.class);
+	
 	TableView<MP3Info> viewer;
-	Set<MP3Info> unique = Collections.synchronizedSet(new HashSet<MP3Info>());
+	//TODO: Maybe move to Controller? Do we need onNewData then?
+	private static Set<MP3Info> unique = Collections.synchronizedSet(new HashSet<MP3Info>());
 	Button searchButton;
 	
 	public SearchMP3Listener(TableView<MP3Info> viewer, Button searchButton, NotifyingWorker worker) {
@@ -25,12 +32,12 @@ public class SearchMP3Listener extends ListenerWoker {
 		super.run();
 	}
 	
-	public String onNewData(MP3Info info) {
+	public void onNewData(MP3Info info) {
 		if(unique.add(info)) {
 			viewer.getItems().add(info);
-			return String.format("Succesfully added %b", info);
+			log.info(String.format("Succesfully added %s", info.toString()));
 		} else {
-			return String.format("%b already added", info);
+			log.warn(String.format("%s already added", info.toString()));
 		}
 	}
 
