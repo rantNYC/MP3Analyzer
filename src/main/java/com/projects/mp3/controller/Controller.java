@@ -3,6 +3,7 @@ package com.projects.mp3.controller;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,10 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.projects.mp3.controller.engine.Engine;
-import com.projects.mp3.controller.engine.EngineUtilities;
-import com.projects.mp3.controller.engine.EngineWorker;
-import com.projects.mp3.controller.engine.ViewerListener;
+import com.projects.mp3.controller.engine.*;
 import com.projects.mp3.controller.popup.*;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.model.Actions;
@@ -42,15 +40,8 @@ public class Controller {
 	
 	private MySQLDriver dbDriver;
 	private Engine engine;
-	private ExecutorService service = Executors.newFixedThreadPool(5, new ThreadFactory() {
-        public Thread newThread(Runnable r) {
-            Thread t = Executors.defaultThreadFactory().newThread(r);
-            t.setName("SearchMP3 " + threadNum.incrementAndGet());
-            t.setDaemon(true);
-            return t;
-        }
-    });
-	private BlockingQueue<MP3Info> queue = new LinkedBlockingQueue<MP3Info>();
+	private final GUIThreadFactory guiFactory = new GUIThreadFactory("GUI Threads");
+	private ExecutorService service = Executors.newFixedThreadPool(10, guiFactory);
 	private AtomicInteger threadNum = new AtomicInteger(0);
 	
 	private final ObservableList<String> actions =FXCollections.observableArrayList(
@@ -87,6 +78,9 @@ public class Controller {
 	Button startActionButton;
 	
 	@FXML
+	Button stopActionButton;
+	
+	@FXML
 	TableView<MP3Info> rootTable;
 	
 	@FXML
@@ -97,10 +91,9 @@ public class Controller {
 
 	@FXML
 	public void initialize() {
+		//TODO: Move database login to another window before accessing this one
 		actionsBox.setItems(actions);
 		getMP3InfoColumns();
-		//TODO: Change
-		service.execute(new ViewerListener(rootTable, queue));
 	}
 	
 	@FXML
@@ -157,9 +150,11 @@ public class Controller {
 		File path = new File(rootPath);
 		if(path.exists() && path.isDirectory()) {
 			engine = new Engine(path);
-			EngineWorker worker = new EngineWorker("SearchMP3 " + threadNum.get(), engine.getMP3Files(), queue);
-			service.execute(worker);
-			
+			EngineWorker worker = new EngineWorker("SearchMP3 " + threadNum.incrementAndGet(), engine.getMP3Files());
+			ListenerWoker viewerListener = new SearchMP3Listener(rootTable, searchMP3Button, worker);
+			worker.addListener(viewerListener);
+			guiFactory.setWorkerName(viewerListener.getWorkerName());
+			service.execute(viewerListener);
 		}else {
 			PopupMessageError popup = new PopupMessageError(null);
 			popup.displayPopUp("Root Folder", "Folder Error", "Folder does not exists");
@@ -200,14 +195,10 @@ public class Controller {
 				return;
 		}
 	}	
-	
+
 	@FXML
-	private void uploadToDB() {
-		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
-			PopupMessageWarning popUp = new PopupMessageWarning(null);
-			popUp.displayPopUp("DB Warning", "DB Connection", 
-					 "Please connect to the database befero running an action");
-		}
+	public void stopAction() {
+		List<Runnable> threads = service.shutdownNow();
 	}
 	
 	@FXML
@@ -253,5 +244,12 @@ public class Controller {
 		}
 	}	
 
-
+	@FXML
+	private void uploadToDB() {
+		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
+			PopupMessageWarning popUp = new PopupMessageWarning(null);
+			popUp.displayPopUp("DB Warning", "DB Connection", 
+					 "Please connect to the database befero running an action");
+		}
+	}
 }

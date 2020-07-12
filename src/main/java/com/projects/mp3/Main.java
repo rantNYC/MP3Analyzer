@@ -12,7 +12,6 @@ import com.projects.mp3.model.MP3Info;
 public class Main {
 
 	public static void main(String[] args) throws Exception {
-		// TODO Auto-generated method stub
 		String dir = "D:\\Songs";
 		Engine engine = new Engine(dir);
 

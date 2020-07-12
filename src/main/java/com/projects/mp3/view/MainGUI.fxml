@@ -84,7 +84,7 @@
 								<HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="20.0" GridPane.rowIndex="3">
 									<children>
 										<Button fx:id="startActionButton" mnemonicParsing="false" onAction="#startAction" text="Start" />
-										<Button mnemonicParsing="false" text="Stop" />
+										<Button fx:id="stopActionButton" mnemonicParsing="false" onAction="#stopAction" text="Stop" />
 									</children>
 								</HBox>
 							</children>
@@ -123,19 +123,11 @@
 									<content>
 										<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
 											<children>
-												<ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" pannable="true" prefHeight="204.0" prefWidth="600.0" vbarPolicy="ALWAYS" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-													<content>
-														<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="170.0" prefWidth="598.0">
-															<children>
 																<TableView fx:id="rootTable" prefHeight="202.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 																	<columnResizePolicy>
 																		<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
 																	</columnResizePolicy>
 																</TableView>
-															</children>
-														</AnchorPane>
-													</content>
-												</ScrollPane>
 											</children>
 										</AnchorPane>
 									</content>
