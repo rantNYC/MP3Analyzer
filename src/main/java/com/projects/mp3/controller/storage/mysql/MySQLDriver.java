@@ -3,10 +3,15 @@ package com.projects.mp3.controller.storage.mysql;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.projects.mp3.controller.engine.EngineUtilities;
 import com.projects.mp3.model.DBStatus;
+import com.projects.mp3.model.MP3Annotation;
 import com.projects.mp3.model.MP3Info;
 
 public class MySQLDriver {
@@ -61,6 +66,32 @@ public class MySQLDriver {
 		}
 	}
 
+	public List<MP3Info> getAllDataInDB() throws SQLException{
+		CallableStatement statement = null;
+		List<MP3Info> data = new ArrayList<MP3Info>();
+		try {
+			statement = conn.prepareCall("{call select_all_info}");
+//			printConsole(statement);
+			
+//			boolean hasResults = statement.execute();
+			ResultSet rs = statement.executeQuery();
+			while(rs.next()) {
+				MP3Info info = new MP3Info(rs.getString("songName"), rs.getString("artistName"), rs.getString("albumName"), 
+										   rs.getString("genreName"), rs.getString("bitrate"), rs.getString("path"),
+										   rs.getDouble("duration"),rs.getDouble("size"));
+				info.setDescription(rs.getString("description"));
+				data.add(info);
+			}
+			
+//			printConsole("MP3 Information stored in the DB");
+		}
+		finally {
+			if(statement != null) statement.close();
+		}
+		
+		return data;
+	}
+	
 	public final void closeConnection() throws SQLException {
 		if(conn != null && !conn.isClosed()) conn.close();
 		status = DBStatus.Disconnected;

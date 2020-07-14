@@ -3,6 +3,9 @@ package com.projects.mp3.controller;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -11,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.projects.mp3.controller.engine.*;
 import com.projects.mp3.controller.popup.*;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
@@ -78,7 +82,10 @@ public class Controller {
 	Button stopActionButton;
 	
 	@FXML
-	TableView<MP3Info> rootTable;
+	TableView<MP3Info> folderTable;
+	
+	@FXML
+	TableView<MP3Info> dbTable;
 	
 	@FXML
 	ListView<String> logView;
@@ -94,7 +101,9 @@ public class Controller {
 		//TODO: Move database login to another window before accessing this one
 		log.info("Initializing GUI...");
 		actionsBox.setItems(actions);
-		getMP3InfoColumns();
+		List<TableColumn<MP3Info, String>> tableColumns = getMP3InfoColumns();
+		folderTable.getColumns().setAll(tableColumns);
+		dbTable.getColumns().setAll(tableColumns);
 		logView.setItems(logger);
 		TextAreaAppender.setTextArea(logger);
 	}
@@ -107,19 +116,19 @@ public class Controller {
 		String password = dbPassword.getText();
 
 		if(EngineUtilities.isNullorEmpty(connection)) {
-			PopupMessageError popUp = new PopupMessageError(null);
+			PopupMessageError popUp = new PopupMessageError();
 			popUp.displayPopUp("DB Error", "Connection Error", "Database url cannot be empty");
 			return;
 		}
 
 		if(EngineUtilities.isNullorEmpty(username)) {
-			PopupMessageError popUp = new PopupMessageError(null);
+			PopupMessageError popUp = new PopupMessageError();
 			popUp.displayPopUp("DB Error", "Username Error", "User cannot be empty");
 			return;
 		}
 
 		if(EngineUtilities.isNullorEmpty(password)) {
-			PopupMessageError popUp = new PopupMessageError(null);
+			PopupMessageError popUp = new PopupMessageError();
 			popUp.displayPopUp("DB Error", "Password Error", "User cannot be empty");
 			return;
 		}
@@ -131,21 +140,45 @@ public class Controller {
 			dbConnectionString.setDisable(true);
 			dbUsername.setDisable(true);
 			dbPassword.setDisable(true);
-			PopupMessageInfo popUp = new PopupMessageInfo(null);
+			fetchDBInformation();
+			PopupMessageInfo popUp = new PopupMessageInfo();
 			popUp.displayPopUp("Database connection", "Connection Sucess", "Succesfully connected to database");
 		} catch (Exception ex) {
-			PopupMessageError popUp = new PopupMessageError(null);
-			popUp.displayPopUp("DB Error", "Credentials Error", 
-					"Cannot connect to the DB, please check the connection and credentials");
+			dbConnectionString.setDisable(false);
+			dbUsername.setDisable(false);
+			dbPassword.setDisable(false);
+			PopupMessageError popUp = new PopupMessageError();
+			log.error("Cannot connect to DB", ex);
+			popUp.displayPopUp("DB Error", "Error connecting to DB", 
+								ex.getMessage());
 		}
 
+	}
+	
+	private void fetchDBInformation() throws SQLException {
+		//TODO: Try catch
+		if (!isDBConnected()) return;
+		List<MP3Info> dataInDb = dbDriver.getAllDataInDB();
+		TableButtonListener.unique.addAll(dataInDb);
+		dbTable.getItems().addAll(dataInDb);
+	}
+
+	private boolean isDBConnected() {
+		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
+			PopupMessageWarning popUp = new PopupMessageWarning();
+			popUp.displayPopUp("DB Warning", "DB Connection", 
+					 "Please connect to the database before running this action");
+			return false;
+		}
+		
+		return true;
 	}
 	
 	@FXML
 	public void searchMP3Files() throws Exception {
 		String rootPath = rootFolder.getText();
 		if(EngineUtilities.isNullorEmpty(rootPath)) {
-			PopupMessageError popup = new PopupMessageError(null);
+			PopupMessageError popup = new PopupMessageError();
 			popup.displayPopUp("Root Folder", "Folder Error", "Select a root folder first");
 			return;
 		}
@@ -154,12 +187,12 @@ public class Controller {
 		if(path.exists() && path.isDirectory()) {
 			engine = new Engine(path);
 			EngineWorker worker = new EngineWorker("SearchMP3 " + threadNum.incrementAndGet(), engine.getMP3Files());
-			ListenerWoker viewerListener = new SearchMP3Listener(rootTable, searchMP3Button, worker);
+			ListenerWoker viewerListener = new TableButtonListener(folderTable, searchMP3Button, worker);
 			worker.addListener(viewerListener);
 			guiFactory.setWorkerName(viewerListener.getWorkerName());
 			service.execute(viewerListener);
 		}else {
-			PopupMessageError popup = new PopupMessageError(null);
+			PopupMessageError popup = new PopupMessageError();
 			popup.displayPopUp("Root Folder", "Folder Error", "Folder does not exists");
 			return;
 		}
@@ -179,7 +212,7 @@ public class Controller {
 	public void startAction() {
 		String actionString = actionsBox.getValue();
 		if(EngineUtilities.isNullorEmpty(actionString)) {
-			PopupMessageWarning popUp = new PopupMessageWarning(null);
+			PopupMessageWarning popUp = new PopupMessageWarning();
 			popUp.displayPopUp("Action Warning", "Action Missing", 
 						 "Please select an action from the dropdown list");
 			return;
@@ -189,6 +222,7 @@ public class Controller {
 		switch(Actions.getAction(indexAction)) {
 			case Upload:
 				uploadToDB();
+				break;
 			case GetSongs:
 				//TODO: Add functionality
 			case GetMP3:
@@ -237,26 +271,30 @@ public class Controller {
 			dbUsername.setDisable(false);
 			dbPassword.setDisable(false);
 		} catch (Exception ex) {
-			PopupMessageError popUp = new PopupMessageError(null);
+			PopupMessageError popUp = new PopupMessageError();
 			popUp.displayPopUp("DB Error", "Fatal Error",
 					"Closing the connection failed " + ex.getStackTrace());
 		}
 	}
 	
-	private void getMP3InfoColumns(){
+	private List<TableColumn<MP3Info, String>> getMP3InfoColumns(){
+		List<TableColumn<MP3Info, String>> columns = new ArrayList<TableColumn<MP3Info, String>>();
 		for(Field field : MP3Info.class.getDeclaredFields()) {
 			MP3Annotation value = field.getAnnotation(MP3Annotation.class);
 			TableColumn<MP3Info, String> column = new TableColumn<MP3Info, String>(value.value());
 			column.setCellValueFactory(new PropertyValueFactory<MP3Info, String>(field.getName()));
-			rootTable.getColumns().add(column);
+			columns.add(column);
+//			rootTable.getColumns().add(column);
 		}
+		
+		return ImmutableList.copyOf(columns);
 	}	
 
 	private void uploadToDB() {
-		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
-			PopupMessageWarning popUp = new PopupMessageWarning(null);
-			popUp.displayPopUp("DB Warning", "DB Connection", 
-					 "Please connect to the database before running this action");
-		}
+		if (!isDBConnected()) return;
+		DatabaseWorker worker = new DatabaseWorker("Upload_To_DB", dbDriver, new ArrayList<MP3Info>(TableButtonListener.unique));
+		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker);
+		worker.addListener(viewerListener);
+		service.execute(viewerListener);
 	}
 }

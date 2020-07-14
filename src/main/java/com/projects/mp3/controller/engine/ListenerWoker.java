@@ -2,7 +2,7 @@ package com.projects.mp3.controller.engine;
 
 import com.projects.mp3.model.MP3Info;
 
-public abstract class ListenerWoker implements ThreadListener, Runnable {
+public abstract class ListenerWoker implements IThreadListener, Runnable {
 
 	NotifyingWorker worker;
 	
@@ -16,10 +16,6 @@ public abstract class ListenerWoker implements ThreadListener, Runnable {
 
 	public String getWorkerName() {
 		return worker.getName();
-	}
-	
-	public void stopWoker() {
-		worker.shutdown();
 	}
 	
 	public abstract void onNewData(MP3Info info);

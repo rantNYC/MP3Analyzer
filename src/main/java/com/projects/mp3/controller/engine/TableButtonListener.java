@@ -9,16 +9,16 @@ import com.projects.mp3.model.MP3Info;
 
 import javafx.scene.control.*;
 
-public class SearchMP3Listener extends ListenerWoker {
+public class TableButtonListener extends ListenerWoker {
 
-	private static final Logger log = LoggerFactory.getLogger(SearchMP3Listener.class);
+	private static final Logger log = LoggerFactory.getLogger(TableButtonListener.class);
 	
 	TableView<MP3Info> viewer;
 	//TODO: Maybe move to Controller? Do we need onNewData then?
-	private static Set<MP3Info> unique = Collections.synchronizedSet(new HashSet<MP3Info>());
+	public static Set<MP3Info> unique = Collections.synchronizedSet(new HashSet<MP3Info>());
 	Button searchButton;
 	
-	public SearchMP3Listener(TableView<MP3Info> viewer, Button searchButton, NotifyingWorker worker) {
+	public TableButtonListener(TableView<MP3Info> viewer, Button searchButton, NotifyingWorker worker) {
 		super(worker);
 		if(viewer == null) throw new IllegalArgumentException("TableView cannot be null");
 		if(searchButton == null) throw new IllegalArgumentException("Button cannot be null");

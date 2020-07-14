@@ -40,9 +40,10 @@ public class MP3Decoder {
 			inputstream = new FileInputStream(mp3Path);
 			ParseContext context = new ParseContext();
 			parser.parse(inputstream, handler, metadata, context);
+			double duractionMinutes = Math.floor(Double.parseDouble(metadata.get("xmpDM:duration"))/EngineUtilities.MILISECONDS_TO_MINUTE * 100) / 100;
 			return new MP3Info(metadata.get("title"), metadata.get("xmpDM:artist"), metadata.get("xmpDM:album"), 
 							   metadata.get("xmpDM:genre"), metadata.get("xmpDM:audioSampleRate"), mp3Path.getAbsolutePath(),
-							   metadata.get("xmpDM:duration"), mp3Path.length());
+							   duractionMinutes, mp3Path.length()/EngineUtilities.BYTES_TO_MEGABYTES);
 		} finally {
 			if(inputstream != null) inputstream.close();
 			log.info("Finished decoding file: " + mp3Path.getAbsolutePath());

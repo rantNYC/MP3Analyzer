@@ -4,7 +4,7 @@ import javafx.scene.control.Alert.AlertType;
 
 public class PopupMessageInfo extends PopupMessage{
 
-	public PopupMessageInfo(AlertType type) {
+	public PopupMessageInfo() {
 		super(AlertType.INFORMATION);
 	}
 }
