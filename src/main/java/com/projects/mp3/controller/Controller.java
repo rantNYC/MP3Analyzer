@@ -5,7 +5,9 @@ import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,9 +19,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 import com.projects.mp3.controller.engine.*;
 import com.projects.mp3.controller.popup.*;
+import com.projects.mp3.controller.storage.DBAction;
+import com.projects.mp3.controller.storage.DBStatus;
+import com.projects.mp3.controller.storage.DatabaseWorker;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.model.Actions;
-import com.projects.mp3.model.DBStatus;
 import com.projects.mp3.model.MP3Annotation;
 import com.projects.mp3.model.MP3Info;
 import com.projects.mp3.view.TextAreaAppender;
@@ -36,12 +40,25 @@ public class Controller {
 
 	private static Logger log = LoggerFactory.getLogger(Controller.class);
 	//TODO: Play songs from GUI
+	//TODO: Add app dataset with information
+	//TODO: Fetch data from DB action
+	//TODO: Generate report action
+	//TODO: Move information gathering from the Table view
+	//Soon, we will implement constrain to the display and data will be lost if we
+	//reference the table view. Instead hold that information in other class, and
+	//add it to the viewer when refresh, or something. This class is where the data
+	//from the actions, search mp3, connect to db will go.
+	//TODO: Create use login before accessing the main window. 
+	//TODO: Store user information, (Encryption, hashing and local caching user id)
 	
 	private MySQLDriver dbDriver;
 	private Engine engine;
 	private final GUIThreadFactory guiFactory = new GUIThreadFactory("GUI Threads");
 	private ExecutorService service = Executors.newFixedThreadPool(10, guiFactory);
 	private AtomicInteger threadNum = new AtomicInteger(0);
+	
+	private Set<MP3Info> appData = Collections.synchronizedSet(new HashSet<MP3Info>());
+	
 	
 	private ObservableList<String> logger = FXCollections.observableArrayList();
 	
@@ -101,9 +118,9 @@ public class Controller {
 		//TODO: Move database login to another window before accessing this one
 		log.info("Initializing GUI...");
 		actionsBox.setItems(actions);
-		List<TableColumn<MP3Info, String>> tableColumns = getMP3InfoColumns();
-		folderTable.getColumns().setAll(tableColumns);
-		dbTable.getColumns().setAll(tableColumns);
+//		List<TableColumn<MP3Info, String>> tableColumns = getMP3InfoColumns();
+		folderTable.getColumns().setAll(getMP3InfoColumns());
+		dbTable.getColumns().setAll(getMP3InfoColumns());
 		logView.setItems(logger);
 		TextAreaAppender.setTextArea(logger);
 	}
@@ -141,8 +158,9 @@ public class Controller {
 			dbUsername.setDisable(true);
 			dbPassword.setDisable(true);
 			fetchDBInformation();
-			PopupMessageInfo popUp = new PopupMessageInfo();
-			popUp.displayPopUp("Database connection", "Connection Sucess", "Succesfully connected to database");
+//			PopupMessageInfo popUp = new PopupMessageInfo();
+//			popUp.displayPopUp("Database connection", "Connection Sucess", "Succesfully connected to database");
+			log.info("Succesfully connected to database");
 		} catch (Exception ex) {
 			dbConnectionString.setDisable(false);
 			dbUsername.setDisable(false);
@@ -158,9 +176,11 @@ public class Controller {
 	private void fetchDBInformation() throws SQLException {
 		//TODO: Try catch
 		if (!isDBConnected()) return;
-		List<MP3Info> dataInDb = dbDriver.getAllDataInDB();
-		TableButtonListener.unique.addAll(dataInDb);
-		dbTable.getItems().addAll(dataInDb);
+//		List<MP3Info> dataInDb = dbDriver.getAllDataInDB();
+		DatabaseWorker worker = new DatabaseWorker("Fetch_From_DB", dbDriver, null, DBAction.Fetch);
+		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, appData);
+		worker.addListener(viewerListener);
+		service.execute(viewerListener);
 	}
 
 	private boolean isDBConnected() {
@@ -187,7 +207,7 @@ public class Controller {
 		if(path.exists() && path.isDirectory()) {
 			engine = new Engine(path);
 			EngineWorker worker = new EngineWorker("SearchMP3 " + threadNum.incrementAndGet(), engine.getMP3Files());
-			ListenerWoker viewerListener = new TableButtonListener(folderTable, searchMP3Button, worker);
+			ListenerWoker viewerListener = new TableButtonListener(folderTable, searchMP3Button, worker, appData);
 			worker.addListener(viewerListener);
 			guiFactory.setWorkerName(viewerListener.getWorkerName());
 			service.execute(viewerListener);
@@ -229,6 +249,14 @@ public class Controller {
 				//TODO: Add functionality
 			case GenerateReport:
 				//TODO: Add functionality
+				//Implementation: Excel file in the output folder (decided by the user?), three sheets
+				//One summary, one db report, and one folder report. 
+				//Summary will have information like: How many files in DB, how many files in root folder,
+				//how many files from root are in DB, how many files from DB are in root, and the diff 
+				//between them
+				//DB Sheet will have all the records in the db
+				//Root folder will have all the records in the root folder
+				//All this based on the table view items
 				throw new UnsupportedOperationException("Action not yet implemented");
 			default:
 				//Shouldn't be here
@@ -291,9 +319,12 @@ public class Controller {
 	}	
 
 	private void uploadToDB() {
-		if (!isDBConnected()) return;
-		DatabaseWorker worker = new DatabaseWorker("Upload_To_DB", dbDriver, new ArrayList<MP3Info>(TableButtonListener.unique));
-		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker);
+		if (!isDBConnected()) {
+			return;
+		}
+		DatabaseWorker worker = new DatabaseWorker("Upload_To_DB", dbDriver, 
+												   folderTable.getItems(), DBAction.Upload);
+		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, appData);
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);
 	}

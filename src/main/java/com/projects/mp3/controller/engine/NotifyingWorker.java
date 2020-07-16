@@ -28,6 +28,14 @@ public abstract class NotifyingWorker implements Runnable {
 			listener.onNewData(info);
 		}
 	}
+	
+	protected final boolean verifyDataUnique(MP3Info info) {
+		for (IThreadListener listener : listeners) {
+			if(!listener.verifyDataUnique(info)) return false;
+		}
+		
+		return true;
+	}
 
 	public NotifyingWorker(String name) {
 		this.name = name;

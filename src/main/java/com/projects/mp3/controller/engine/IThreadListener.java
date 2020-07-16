@@ -6,4 +6,5 @@ public interface IThreadListener {
 
 	void onNewData(final MP3Info info);
 	void onThreadFinished(final NotifyingWorker notifyingThread);
+	boolean verifyDataUnique(final MP3Info info);
 }

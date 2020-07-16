@@ -84,7 +84,6 @@ public class MP3Info {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((artistName == null) ? 0 : artistName.hashCode());
-		result = prime * result + ((path == null) ? 0 : path.hashCode());
 		result = prime * result + ((songName == null) ? 0 : songName.hashCode());
 		return result;
 	}
@@ -102,11 +101,6 @@ public class MP3Info {
 			if (other.artistName != null)
 				return false;
 		} else if (!artistName.equals(other.artistName))
-			return false;
-		if (path == null) {
-			if (other.path != null)
-				return false;
-		} else if (!path.equals(other.path))
 			return false;
 		if (songName == null) {
 			if (other.songName != null)

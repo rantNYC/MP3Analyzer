@@ -9,7 +9,6 @@ import javafx.scene.text.Text;
 public abstract class PopupMessage {
 
 	Alert alert;
-	//TODO: Add enum for titles
 	public PopupMessage(AlertType type) {
 		alert = new Alert(type);
 	}

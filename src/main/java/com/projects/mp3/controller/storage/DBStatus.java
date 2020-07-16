@@ -1,4 +1,4 @@
-package com.projects.mp3.model;
+package com.projects.mp3.controller.storage;
 
 public enum DBStatus{
 	Connected,
