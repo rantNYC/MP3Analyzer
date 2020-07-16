@@ -28,7 +28,8 @@ public class EngineWorker extends NotifyingWorker{
 	public void execute() {
 		log.info("Executing thread: " + workerName);
 		for(File file : mp3Files) {
-			if(isInterrupted || Thread.currentThread().isInterrupted()) {
+			if(Thread.currentThread().isInterrupted()) {
+				log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
 				return;
 			}
 			//TODO: Handle millions of rows

@@ -1,7 +1,5 @@
 package com.projects.mp3.model;
 
-import com.projects.mp3.controller.engine.EngineUtilities;
-
 public class MP3Info {
 	
 	@MP3Annotation("Song Name")
@@ -24,16 +22,16 @@ public class MP3Info {
 	@MP3Annotation("Size(Mb)")
 	double sizeMb;
 	
-	public MP3Info(String songName, String artistName, String album, String genre, String bitRate,
-					String path, String duration, long sizeBytes) {
+	public MP3Info(String songName, String artistName, String album, String genre, 
+					String bitRate,	String path, double duration, double sizeMB) {
 		this.songName = songName;
 		this.artistName = artistName;
 		this.album = album;
 		this.genre = genre;
 		this.bitRate = bitRate;
 		this.path = path;
-		this.duration = Math.floor(Double.parseDouble(duration)/EngineUtilities.MILISECONDS_TO_MINUTE * 100) / 100;
-		this.sizeMb = sizeBytes/EngineUtilities.BYTES_TO_MEGABYTES;
+		this.duration = duration;
+		this.sizeMb = sizeMB;
 	}
 
 	public String getDescription() {
@@ -86,7 +84,6 @@ public class MP3Info {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((artistName == null) ? 0 : artistName.hashCode());
-		result = prime * result + ((path == null) ? 0 : path.hashCode());
 		result = prime * result + ((songName == null) ? 0 : songName.hashCode());
 		return result;
 	}
@@ -104,11 +101,6 @@ public class MP3Info {
 			if (other.artistName != null)
 				return false;
 		} else if (!artistName.equals(other.artistName))
-			return false;
-		if (path == null) {
-			if (other.path != null)
-				return false;
-		} else if (!path.equals(other.path))
 			return false;
 		if (songName == null) {
 			if (other.songName != null)

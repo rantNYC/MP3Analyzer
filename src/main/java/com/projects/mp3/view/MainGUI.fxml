@@ -17,22 +17,40 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.projects.mp3.controller.Controller">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity"
+	minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0"
+	prefWidth="900.0" xmlns="http://javafx.com/javafx/11.0.1"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.projects.mp3.controller.Controller">
 	<children>
-		<VBox minHeight="200.0" minWidth="300.0" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="5.0">
+		<VBox minHeight="200.0" minWidth="300.0" prefHeight="400.0"
+			prefWidth="600.0" AnchorPane.bottomAnchor="0.0"
+			AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+			AnchorPane.topAnchor="5.0">
 			<children>
 				<AnchorPane prefHeight="200.0" prefWidth="600.0">
 					<children>
-						<GridPane hgap="5.0" prefHeight="180.0" prefWidth="351.0" vgap="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="229.0" AnchorPane.topAnchor="10.0">
+						<GridPane hgap="5.0" prefHeight="180.0" prefWidth="351.0"
+							vgap="5.0" AnchorPane.bottomAnchor="10.0"
+							AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="229.0"
+							AnchorPane.topAnchor="10.0">
 							<columnConstraints>
-								<ColumnConstraints fillWidth="false" halignment="LEFT" hgrow="NEVER" maxWidth="100.0" minWidth="-Infinity" prefWidth="85.0" />
-								<ColumnConstraints halignment="LEFT" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="100.0" prefWidth="261.6000122070313" />
+								<ColumnConstraints fillWidth="false"
+									halignment="LEFT" hgrow="NEVER" maxWidth="100.0"
+									minWidth="-Infinity" prefWidth="85.0" />
+								<ColumnConstraints halignment="LEFT"
+									hgrow="ALWAYS" maxWidth="1.7976931348623157E308"
+									minWidth="100.0" prefWidth="261.6000122070313" />
 							</columnConstraints>
 							<rowConstraints>
-								<RowConstraints minHeight="10.0" prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
-								<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-								<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-								<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" vgrow="SOMETIMES" />
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" vgrow="SOMETIMES" />
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" vgrow="SOMETIMES" />
 							</rowConstraints>
 							<children>
 								<Label text="Database URL:">
@@ -50,40 +68,71 @@
 										<Insets left="5.0" />
 									</GridPane.margin>
 								</Label>
-								<Label text="Root Folder:" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3">
+								<Label text="Root Folder:" GridPane.hgrow="ALWAYS"
+									GridPane.rowIndex="3">
 									<GridPane.margin>
 										<Insets left="5.0" />
 									</GridPane.margin>
 								</Label>
-								<TextField fx:id="dbConnectionString" alignment="TOP_LEFT" promptText="Enter database connection" GridPane.columnIndex="1" GridPane.hgrow="NEVER" />
-								<TextField fx:id="dbUsername" promptText="Enter username" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
-								<PasswordField fx:id="dbPassword" onKeyPressed="#keyPressedHandler" promptText="Enter password" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" />
-								<HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3">
+								<TextField fx:id="dbConnectionString"
+									alignment="TOP_LEFT" promptText="Enter database connection"
+									GridPane.columnIndex="1" GridPane.hgrow="NEVER" />
+								<TextField fx:id="dbUsername"
+									promptText="Enter username" GridPane.columnIndex="1"
+									GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
+								<PasswordField fx:id="dbPassword"
+									onKeyPressed="#keyPressedHandler" promptText="Enter password"
+									GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+									GridPane.rowIndex="2" />
+								<HBox alignment="CENTER_LEFT" prefHeight="100.0"
+									prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1"
+									GridPane.hgrow="ALWAYS" GridPane.rowIndex="3">
 									<children>
-										<TextField fx:id="rootFolder" maxWidth="1.7976931348623157E308" promptText="Folder containing MP3" HBox.hgrow="ALWAYS" />
-										<Button fx:id="selectFolderButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#chooseRootFolder" text="..." />
+										<TextField fx:id="rootFolder"
+											maxWidth="1.7976931348623157E308"
+											promptText="Folder containing MP3" HBox.hgrow="ALWAYS" />
+										<Button fx:id="selectFolderButton"
+											alignment="CENTER_RIGHT" mnemonicParsing="false"
+											onAction="#chooseRootFolder" text="..." />
 									</children>
 								</HBox>
 							</children>
 						</GridPane>
-						<GridPane alignment="CENTER" layoutX="378.0" layoutY="-3.0" prefHeight="200.0" prefWidth="222.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+						<GridPane alignment="CENTER" layoutX="378.0"
+							layoutY="-3.0" prefHeight="200.0" prefWidth="222.0"
+							AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0"
+							AnchorPane.topAnchor="0.0">
 							<columnConstraints>
-								<ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+								<ColumnConstraints halignment="CENTER"
+									hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
 							</columnConstraints>
 							<rowConstraints>
-								<RowConstraints minHeight="10.0" prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
-								<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-								<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-								<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" vgrow="SOMETIMES" />
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" vgrow="SOMETIMES" />
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" vgrow="SOMETIMES" />
 							</rowConstraints>
 							<children>
-								<Button fx:id="dbConnectionButton" alignment="CENTER" mnemonicParsing="false" onAction="#connectToDB" text="Connect DB" />
-								<Button fx:id="searchMP3Button" alignment="CENTER" mnemonicParsing="false" onAction="#searchMP3Files" text="Search MP3" GridPane.rowIndex="1" />
-								<ComboBox id="optionsBox" fx:id="actionsBox" prefWidth="150.0" promptText="Select Option" GridPane.rowIndex="2" />
-								<HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="20.0" GridPane.rowIndex="3">
+								<Button fx:id="dbConnectionButton" alignment="CENTER"
+									mnemonicParsing="false" onAction="#connectToDB"
+									text="Connect DB" />
+								<Button fx:id="searchMP3Button" alignment="CENTER"
+									mnemonicParsing="false" onAction="#searchMP3Files"
+									text="Search MP3" GridPane.rowIndex="1" />
+								<ComboBox id="optionsBox" fx:id="actionsBox"
+									prefWidth="150.0" promptText="Select Option"
+									GridPane.rowIndex="2" />
+								<HBox alignment="CENTER" prefHeight="100.0"
+									prefWidth="200.0" spacing="20.0" GridPane.rowIndex="3">
 									<children>
-										<Button fx:id="startActionButton" mnemonicParsing="false" onAction="#startAction" text="Start" />
-										<Button fx:id="stopActionButton" mnemonicParsing="false" onAction="#stopAction" text="Stop" />
+										<Button fx:id="startActionButton"
+											mnemonicParsing="false" onAction="#startAction" text="Start" />
+										<Button fx:id="stopActionButton"
+											mnemonicParsing="false" onAction="#stopAction" text="Stop" />
 									</children>
 								</HBox>
 							</children>
@@ -93,70 +142,101 @@
 						<Insets />
 					</VBox.margin>
 				</AnchorPane>
-				<AnchorPane prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+				<AnchorPane prefHeight="200.0" prefWidth="200.0"
+					VBox.vgrow="ALWAYS">
 					<children>
-						<TabPane prefHeight="234.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+						<TabPane prefHeight="234.0" prefWidth="600.0"
+							tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0"
+							AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+							AnchorPane.topAnchor="0.0">
 							<tabs>
 								<Tab text="Database">
 									<content>
-										<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="600.0">
+										<AnchorPane minHeight="0.0" minWidth="0.0"
+											prefHeight="180.0" prefWidth="600.0">
 											<children>
-																<TableView prefHeight="202.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-																	<columnResizePolicy>
-																		<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-																	</columnResizePolicy>
-																</TableView>
+												<TableView fx:id="dbTable" prefHeight="202.0"
+													prefWidth="600.0" AnchorPane.bottomAnchor="0.0"
+													AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+													AnchorPane.topAnchor="0.0">
+													<columnResizePolicy>
+														<TableView
+															fx:constant="CONSTRAINED_RESIZE_POLICY" />
+													</columnResizePolicy>
+												</TableView>
 											</children>
 										</AnchorPane>
 									</content>
 								</Tab>
 								<Tab text="Root Folder">
 									<content>
-										<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+										<AnchorPane minHeight="0.0" minWidth="0.0"
+											prefHeight="180.0" prefWidth="200.0">
 											<children>
-																<TableView fx:id="rootTable" prefHeight="202.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-																	<columnResizePolicy>
-																		<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-																	</columnResizePolicy>
-																</TableView>
+												<TableView fx:id="folderTable" prefHeight="202.0"
+													prefWidth="600.0" AnchorPane.bottomAnchor="0.0"
+													AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+													AnchorPane.topAnchor="0.0">
+													<columnResizePolicy>
+														<TableView
+															fx:constant="CONSTRAINED_RESIZE_POLICY" />
+													</columnResizePolicy>
+												</TableView>
 											</children>
 										</AnchorPane>
 									</content>
 								</Tab>
 								<Tab text="Log Info">
 									<content>
-										<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                 <children>
-                                    <ListView fx:id="logView" prefHeight="364.0" prefWidth="900.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                 </children></AnchorPane>
+										<AnchorPane minHeight="0.0" minWidth="0.0"
+											prefHeight="180.0" prefWidth="200.0">
+											<children>
+												<ListView fx:id="logView" prefHeight="364.0"
+													prefWidth="900.0" AnchorPane.bottomAnchor="0.0"
+													AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+													AnchorPane.topAnchor="0.0" />
+											</children>
+										</AnchorPane>
 									</content>
 								</Tab>
 							</tabs>
 						</TabPane>
 					</children>
 				</AnchorPane>
-            <AnchorPane maxHeight="-Infinity" minHeight="-Infinity" prefHeight="20.0" prefWidth="900.0">
-               <children>
-                  <HBox prefHeight="100.0" prefWidth="900.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                     <children>
-                        <Label maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="70.0" text="Connection:">
-                           <HBox.margin>
-                              <Insets />
-                           </HBox.margin>
-                           <padding>
-                              <Insets left="5.0" />
-                           </padding>
-                        </Label>
-                        <Label fx:id="connectedToLabel" maxWidth="1.7976931348623157E308" minWidth="300.0" prefHeight="20.0" prefWidth="707.0" HBox.hgrow="ALWAYS" />
-                        <Label alignment="CENTER_RIGHT" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="39.0" text="Status:" />
-                        <Label fx:id="statusLabel" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="75.0" text="Offline">
-                           <HBox.margin>
-                              <Insets left="5.0" />
-                           </HBox.margin></Label>
-                     </children>
-                  </HBox>
-               </children>
-            </AnchorPane>
+				<AnchorPane maxHeight="-Infinity" minHeight="-Infinity"
+					prefHeight="20.0" prefWidth="900.0">
+					<children>
+						<HBox prefHeight="100.0" prefWidth="900.0"
+							AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+							AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+							<children>
+								<Label maxWidth="-Infinity" minHeight="-Infinity"
+									minWidth="-Infinity" prefHeight="20.0" prefWidth="70.0"
+									text="Connection:">
+									<HBox.margin>
+										<Insets />
+									</HBox.margin>
+									<padding>
+										<Insets left="5.0" />
+									</padding>
+								</Label>
+								<Label fx:id="connectedToLabel"
+									maxWidth="1.7976931348623157E308" minWidth="300.0"
+									prefHeight="20.0" prefWidth="707.0" HBox.hgrow="ALWAYS" />
+								<Label alignment="CENTER_RIGHT" maxWidth="-Infinity"
+									minWidth="-Infinity" prefHeight="20.0" prefWidth="39.0"
+									text="Status:" />
+								<Label fx:id="statusLabel" maxWidth="-Infinity"
+									minWidth="-Infinity" prefHeight="20.0" prefWidth="75.0"
+									text="Offline">
+									<HBox.margin>
+										<Insets left="5.0" />
+									</HBox.margin>
+								</Label>
+							</children>
+						</HBox>
+					</children>
+				</AnchorPane>
 			</children>
 		</VBox>
 	</children>

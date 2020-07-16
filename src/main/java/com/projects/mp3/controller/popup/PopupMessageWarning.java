@@ -4,7 +4,7 @@ import javafx.scene.control.Alert.AlertType;
 
 public class PopupMessageWarning extends PopupMessage{
 
-	public PopupMessageWarning(AlertType type) {
+	public PopupMessageWarning() {
 		super(AlertType.WARNING);
 	}
 }

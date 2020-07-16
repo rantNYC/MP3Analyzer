@@ -2,6 +2,9 @@ package com.projects.mp3.view;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -10,6 +13,8 @@ import javafx.stage.Stage;
 
 public class MainGUI extends Application{
 
+	private static Logger log = LoggerFactory.getLogger(MainGUI.class);
+	
 	protected final int SCREEN_WIDTH   = 900;
 	protected final int SCREEN_HEIGHT  = 600;
 	
@@ -29,7 +34,8 @@ public class MainGUI extends Application{
 	        primaryStage.show();
 	        
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("Error in GUI", e);
+			System.exit(-1);
 		}
 	}
 }
