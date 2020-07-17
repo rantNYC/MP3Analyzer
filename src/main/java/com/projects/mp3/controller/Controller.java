@@ -4,15 +4,10 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,9 +18,11 @@ import com.projects.mp3.controller.storage.DBAction;
 import com.projects.mp3.controller.storage.DBStatus;
 import com.projects.mp3.controller.storage.DatabaseWorker;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
-import com.projects.mp3.model.Actions;
+import com.projects.mp3.model.Action;
+import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.MP3Annotation;
 import com.projects.mp3.model.MP3Info;
+import com.projects.mp3.model.SynchronizedDataContainer;
 import com.projects.mp3.view.TextAreaAppender;
 
 import javafx.collections.FXCollections;
@@ -55,10 +52,7 @@ public class Controller {
 	private Engine engine;
 	private final GUIThreadFactory guiFactory = new GUIThreadFactory("GUI Threads");
 	private ExecutorService service = Executors.newFixedThreadPool(10, guiFactory);
-	private AtomicInteger threadNum = new AtomicInteger(0);
-	
-	private Set<MP3Info> appData = Collections.synchronizedSet(new HashSet<MP3Info>());
-	
+	private SynchronizedDataContainer container = new SynchronizedDataContainer();
 	
 	private ObservableList<String> logger = FXCollections.observableArrayList();
 	
@@ -158,8 +152,6 @@ public class Controller {
 			dbUsername.setDisable(true);
 			dbPassword.setDisable(true);
 			fetchDBInformation();
-//			PopupMessageInfo popUp = new PopupMessageInfo();
-//			popUp.displayPopUp("Database connection", "Connection Sucess", "Succesfully connected to database");
 			log.info("Succesfully connected to database");
 		} catch (Exception ex) {
 			dbConnectionString.setDisable(false);
@@ -177,8 +169,8 @@ public class Controller {
 		//TODO: Try catch
 		if (!isDBConnected()) return;
 //		List<MP3Info> dataInDb = dbDriver.getAllDataInDB();
-		DatabaseWorker worker = new DatabaseWorker("Fetch_From_DB", dbDriver, null, DBAction.Fetch);
-		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, appData);
+		DatabaseWorker worker = new DatabaseWorker("DBContainer", dbDriver, null, DBAction.Fetch);
+		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, container);
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);
 	}
@@ -206,8 +198,8 @@ public class Controller {
 		File path = new File(rootPath);
 		if(path.exists() && path.isDirectory()) {
 			engine = new Engine(path);
-			EngineWorker worker = new EngineWorker("SearchMP3 " + threadNum.incrementAndGet(), engine.getMP3Files());
-			ListenerWoker viewerListener = new TableButtonListener(folderTable, searchMP3Button, worker, appData);
+			EngineWorker worker = new EngineWorker(ContainerType.FolderContainer.toString(), engine.getMP3Files());
+			ListenerWoker viewerListener = new TableButtonListener(folderTable, searchMP3Button, worker, container);
 			worker.addListener(viewerListener);
 			guiFactory.setWorkerName(viewerListener.getWorkerName());
 			service.execute(viewerListener);
@@ -239,7 +231,7 @@ public class Controller {
 		}
 		int indexAction = actions.indexOf(actionString);
 		
-		switch(Actions.getAction(indexAction)) {
+		switch(Action.getAction(indexAction)) {
 			case Upload:
 				uploadToDB();
 				break;
@@ -322,9 +314,10 @@ public class Controller {
 		if (!isDBConnected()) {
 			return;
 		}
-		DatabaseWorker worker = new DatabaseWorker("Upload_To_DB", dbDriver, 
-												   folderTable.getItems(), DBAction.Upload);
-		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, appData);
+		DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, 
+													container.getDataList(ContainerType.FolderContainer.toString()), 
+													DBAction.Upload);
+		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, container);
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);
 	}

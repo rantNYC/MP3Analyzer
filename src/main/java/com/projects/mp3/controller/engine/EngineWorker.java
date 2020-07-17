@@ -37,7 +37,11 @@ public class EngineWorker extends NotifyingWorker{
 			MP3Info info = null;
 			try {
 				info = decoder.decodeInformation();
-				notifyNewDataThread(info);
+				if(notifyNewDataThread(info)) {
+					log.info(String.format("Data %s was sucessfully added", info.toString()));
+				}else {					
+					log.warn(String.format("Data %s already exists", info.toString()));
+				}
 			} catch (Exception e) {
 				log.error("Error decoding: " + file, e);
 			}

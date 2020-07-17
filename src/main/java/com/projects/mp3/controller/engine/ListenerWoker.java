@@ -1,17 +1,16 @@
 package com.projects.mp3.controller.engine;
 
-import java.util.Set;
-
-import com.projects.mp3.model.MP3Info;
+import com.projects.mp3.model.SynchronizedDataContainer;
 
 public abstract class ListenerWoker implements IThreadListener, Runnable {
 
 	NotifyingWorker worker;
-	protected Set<MP3Info> appData;
+	SynchronizedDataContainer container;
 	
-	public ListenerWoker(NotifyingWorker worker, Set<MP3Info> appData) {
+	public ListenerWoker(NotifyingWorker worker, SynchronizedDataContainer container) {
 		this.worker = worker;
-		this.appData = appData;
+		this.container = container;
+//		this.container.addEmptyConcurrentSet(worker.getName());
 	}
 
 	public void run() {

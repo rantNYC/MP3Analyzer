@@ -10,7 +10,7 @@ public abstract class NotifyingWorker implements Runnable {
 	private final Set<IThreadListener> listeners = new CopyOnWriteArraySet<IThreadListener>();
 	private final String name;
 	volatile boolean isInterrupted = false;
-	
+
 	public final void addListener(final IThreadListener listener) {
 		listeners.add(listener);
 	}
@@ -22,14 +22,16 @@ public abstract class NotifyingWorker implements Runnable {
 			listener.onThreadFinished(this);
 		}
 	}
-	
-	protected final void notifyNewDataThread(MP3Info info) {
+
+	protected final boolean notifyNewDataThread(MP3Info info) {
 		for (IThreadListener listener : listeners) {
-			listener.onNewData(info);
+			if(!listener.onNewData(info)) return false;
 		}
+		
+		return true;
 	}
 	
-	protected final boolean verifyDataUnique(MP3Info info) {
+	protected final boolean notifyDataUnique(MP3Info info) {
 		for (IThreadListener listener : listeners) {
 			if(!listener.verifyDataUnique(info)) return false;
 		}
@@ -37,6 +39,12 @@ public abstract class NotifyingWorker implements Runnable {
 		return true;
 	}
 
+	protected final void notifyNewDataError(MP3Info info) {
+		for (IThreadListener listener : listeners) {
+			listener.onNewDataError(info);
+		}
+	}
+	
 	public NotifyingWorker(String name) {
 		this.name = name;
 	}
@@ -44,7 +52,7 @@ public abstract class NotifyingWorker implements Runnable {
 	public String getName() {
 		return name;
 	}
-	
+
 	public void run() {
 		try {
 			execute();
@@ -57,6 +65,6 @@ public abstract class NotifyingWorker implements Runnable {
 	public void shutdown() {
 		isInterrupted = true;
 	}
-	
+
 	public abstract void execute();
 }
