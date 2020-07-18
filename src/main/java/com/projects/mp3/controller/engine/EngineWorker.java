@@ -5,6 +5,7 @@ import java.util.*	;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.MP3Info;
 
 public class EngineWorker extends NotifyingWorker{
@@ -16,7 +17,7 @@ public class EngineWorker extends NotifyingWorker{
 //	private final Engine engine;
 	
 	public EngineWorker(String name, final List<File> mp3Files) {
-		super(name);
+		super(name, ContainerType.FolderContainer);
 		if(!EngineUtilities.isNullorEmpty(name))
 			workerName = name;
 		else

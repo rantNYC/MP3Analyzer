@@ -3,6 +3,7 @@ package com.projects.mp3.controller.engine;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.MP3Info;
 
 public abstract class NotifyingWorker implements Runnable {
@@ -10,7 +11,10 @@ public abstract class NotifyingWorker implements Runnable {
 	private final Set<IThreadListener> listeners = new CopyOnWriteArraySet<IThreadListener>();
 	private final String name;
 	volatile boolean isInterrupted = false;
-
+	
+	//TODO: Move to subclass for containers only?
+	public final ContainerType type;
+	
 	public final void addListener(final IThreadListener listener) {
 		listeners.add(listener);
 	}
@@ -45,8 +49,9 @@ public abstract class NotifyingWorker implements Runnable {
 		}
 	}
 	
-	public NotifyingWorker(String name) {
+	public NotifyingWorker(String name, ContainerType type) {
 		this.name = name;
+		this.type = type;
 	}
 
 	public String getName() {

@@ -9,21 +9,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.projects.mp3.controller.engine.EngineUtilities;
 
 
 public final class SynchronizedDataContainer {
 
-	Map<String, Set<MP3Info>> data;
+	Map<ContainerType, Set<MP3Info>> data;
 	
 	public SynchronizedDataContainer() {
-		// TODO Add concurrent map, <String, Set<MP3Info>> and method to modify 
-		// them, this should be synchronized
-		this.data = new ConcurrentHashMap<String, Set<MP3Info>>();
+		this.data = new ConcurrentHashMap<ContainerType, Set<MP3Info>>();
+		for(ContainerType type : ContainerType.values()) {
+			data.put(type, Sets.newConcurrentHashSet());
+		}
 	}
 	
-	public boolean addConcurrentSet(String name, Set<MP3Info> set) {
-		if(EngineUtilities.isNullorEmpty(name) || set == null) {
+	public boolean addConcurrentSet(ContainerType name, Set<MP3Info> set) {
+		if(name == null || set == null) {
 			return false;
 		}
 		if(data.containsKey(name)) {
@@ -37,8 +37,8 @@ public final class SynchronizedDataContainer {
 		return true;
 	}
 	
-	public boolean addDataToContainer(String name, MP3Info info) {
-		if(EngineUtilities.isNullorEmpty(name) || info == null) {
+	public boolean addDataToContainer(ContainerType name, MP3Info info) {
+		if(name == null || info == null) {
 			return false;
 		}
 		
@@ -55,8 +55,7 @@ public final class SynchronizedDataContainer {
 		return true;
 	}
 	
-	public Set<MP3Info> getDataSet(String name){
-		if(EngineUtilities.isNullorEmpty(name)) return null;
+	public Set<MP3Info> getDataSet(ContainerType name){
 		if(!data.containsKey(name)) {
 			return null;
 		}
@@ -64,19 +63,18 @@ public final class SynchronizedDataContainer {
 		return ImmutableSet.copyOf(data.get(name));
 	}
 	
-	public List<MP3Info> getDataList(String name){
+	public List<MP3Info> getDataList(ContainerType name){
 		Set<MP3Info> data = getDataSet(name);
 		return data == null ? null : ImmutableList.copyOf(data);
 	}
 
-	public void addEmptyConcurrentSet(String name) {
-		if(EngineUtilities.isNullorEmpty(name)) return;
+	public void addEmptyConcurrentSet(ContainerType name) {
 		if(!data.containsKey(name)) {
 			data.put(name, Sets.newConcurrentHashSet());
 		}	
 	}
 
-	public boolean containsDataInContainer(String name, MP3Info info) {
+	public boolean containsDataInContainer(ContainerType name, MP3Info info) {
 		if(data.containsKey(name)) {
 			if(data.get(name) != null) {
 				return data.get(name).contains(info);

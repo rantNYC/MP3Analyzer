@@ -9,18 +9,20 @@ import org.slf4j.LoggerFactory;
 import com.projects.mp3.controller.engine.EngineUtilities;
 import com.projects.mp3.controller.engine.NotifyingWorker;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
+import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.MP3Info;
 
 public class DatabaseWorker extends NotifyingWorker {
 
 	private static final Logger log = LoggerFactory.getLogger(DatabaseWorker.class);
 	
+	public final ContainerType type = ContainerType.DBContainer;
 	MySQLDriver driver;
 	List<MP3Info> data;
 	DBAction action;
 	
 	public DatabaseWorker(String name, MySQLDriver driver,final List<MP3Info> data, DBAction action) {
-		super(name);
+		super(name, ContainerType.DBContainer);
 		if(driver == null) throw new IllegalArgumentException("DB driver cannot be null");
 		this.driver = driver;
 		this.data = data;

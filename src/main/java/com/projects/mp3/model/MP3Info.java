@@ -1,7 +1,5 @@
 package com.projects.mp3.model;
 
-import java.util.Objects;
-
 public class MP3Info {
 	
 	@MP3Annotation("Song Name")

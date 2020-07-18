@@ -315,7 +315,7 @@ public class Controller {
 			return;
 		}
 		DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, 
-													container.getDataList(ContainerType.FolderContainer.toString()), 
+													container.getDataList(ContainerType.FolderContainer), 
 													DBAction.Upload);
 		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, container);
 		worker.addListener(viewerListener);

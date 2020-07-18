@@ -28,7 +28,7 @@ public class TableButtonListener extends ListenerWoker {
 	
 	@Override
 	public boolean onNewData(MP3Info info) {
-		if(container.addDataToContainer(worker.getName(), info)) {
+		if(container.addDataToContainer(worker.type, info)) {
 			viewer.getItems().add(info);
 			return true;
 		} else {
@@ -43,8 +43,8 @@ public class TableButtonListener extends ListenerWoker {
 
 	@Override
 	public boolean verifyDataUnique(MP3Info info) {
-		if(container.containsDataInContainer(worker.getName(), info) ||
-				container.containsDataInContainer(ContainerType.OrphanContainer.toString(), info)) {
+		if(container.containsDataInContainer(worker.type, info) ||
+				container.containsDataInContainer(ContainerType.OrphanContainer, info)) {
 			return false;
 		}
 		
@@ -53,7 +53,7 @@ public class TableButtonListener extends ListenerWoker {
 
 	@Override
 	public void onNewDataError(MP3Info info) {
-		container.addDataToContainer(ContainerType.OrphanContainer.toString(), info);
+		container.addDataToContainer(ContainerType.OrphanContainer, info);
 	}
 
 }
