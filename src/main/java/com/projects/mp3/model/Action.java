@@ -1,14 +1,14 @@
 package com.projects.mp3.model;
 
-public enum Actions {
+public enum Action {
 	Upload,
 	GetSongs,
 	GetMP3,
 	GenerateReport;
 	
-	private static Actions[] values = Actions.values();
+	private static Action[] values = Action.values();
 	
-	public static Actions getAction(int index) {
+	public static Action getAction(int index) {
 		if(index < 0 || index >= values.length)
 			throw new IllegalArgumentException("Index is out of bounds");
 		

@@ -6,20 +6,23 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.projects.mp3.controller.engine.EngineUtilities;
 import com.projects.mp3.controller.engine.NotifyingWorker;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
+import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.MP3Info;
 
 public class DatabaseWorker extends NotifyingWorker {
 
 	private static final Logger log = LoggerFactory.getLogger(DatabaseWorker.class);
 	
+	public final ContainerType type = ContainerType.DBContainer;
 	MySQLDriver driver;
 	List<MP3Info> data;
 	DBAction action;
 	
 	public DatabaseWorker(String name, MySQLDriver driver,final List<MP3Info> data, DBAction action) {
-		super(name);
+		super(name, ContainerType.DBContainer);
 		if(driver == null) throw new IllegalArgumentException("DB driver cannot be null");
 		this.driver = driver;
 		this.data = data;
@@ -53,18 +56,28 @@ public class DatabaseWorker extends NotifyingWorker {
 		
 		for(MP3Info info : data) {
 			//TODO: Fix this with data container
-//			if(!verifyDataUnique(info)) {
-//				log.warn(String.format("%s exists in DB already", info.toString()));
-//				continue;
-//			}
+			if(!notifyDataUnique(info)) {
+				log.warn(String.format("%s exists in DB already", info.toString()));
+				continue;
+			}
 			if(Thread.currentThread().isInterrupted()) {
 				log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
 				return;
 			}
 			try {
+				if(EngineUtilities.isNullorEmpty(info.getSongName()) ||
+					EngineUtilities.isNullorEmpty(info.getArtistName())) {
+					log.warn(String.format("Cannot insert %s because it contains null for primary keys", info.toString()));
+					continue;
+				}
 				driver.insertMP3ToDB(info);
-				notifyNewDataThread(info);
+				if(notifyNewDataThread(info)) {
+					log.info(String.format("Data %s was sucessfully added", info.toString()));
+				}else {					
+					log.warn(String.format("Data %s already exists", info.toString()));
+				}
 			} catch (Exception e) {
+//				notifyNewDataError(info);
 				log.error("Cannot insert data to DB " + info.toString(), e);
 			}
 		}
@@ -77,7 +90,11 @@ public class DatabaseWorker extends NotifyingWorker {
 				log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
 				return;
 			}
-			notifyNewDataThread(info);
+			if(notifyNewDataThread(info)) {
+				log.info(String.format("Data %s was sucessfully added", info.toString()));
+			}else {					
+				log.warn(String.format("Data %s already exists", info.toString()));
+			}
 		}
 	}
 
