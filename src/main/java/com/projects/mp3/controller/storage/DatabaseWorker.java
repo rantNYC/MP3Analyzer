@@ -33,6 +33,7 @@ public class DatabaseWorker extends NotifyingWorker {
 	public void execute() {
 		switch(action) {
 			case Fetch:
+			case Refresh:
 				try {
 					executeFetching();
 				} catch (SQLException e) {
@@ -50,12 +51,12 @@ public class DatabaseWorker extends NotifyingWorker {
 
 	private void executeUpload() {
 		if(data == null || data.size() == 0) {
-			log.info("No MP3 Information to upload");
+			String content = action == DBAction.Fetch ? "No MP3Data to upload" : "DB already up-to-date"; 
+			log.info(content);
 			return;
 		}
 		
 		for(MP3Info info : data) {
-			//TODO: Fix this with data container
 			if(!notifyDataUnique(info)) {
 				log.warn(String.format("%s exists in DB already", info.toString()));
 				continue;

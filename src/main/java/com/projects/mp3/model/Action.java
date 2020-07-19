@@ -2,10 +2,9 @@ package com.projects.mp3.model;
 
 public enum Action {
 	Upload,
-	GetSongs,
-	GetMP3,
+	RefreshDB,
 	GenerateReport;
-	
+	//TODO: Assign names to each one when to String
 	private static Action[] values = Action.values();
 	
 	public static Action getAction(int index) {
