@@ -23,6 +23,10 @@ public final class SynchronizedDataContainer {
 		}
 	}
 	
+	public int size() {
+		return data.size();
+	}
+	
 	public boolean addConcurrentSet(ContainerType name, Set<MP3Info> set) {
 		if(name == null || set == null) {
 			return false;
