@@ -48,6 +48,14 @@ public class MainGUIController {
 	//from the actions, search mp3, connect to db will go.
 	//TODO: Create use login before accessing the main window. 
 	//TODO: Store user information, (Encryption, hashing and local caching user id)
+	//TODO: DB Side: Modify DB Schema to add User table and MP3Info-User table
+	//	 	Create Stored Procedure to save User information
+	//Java Side: Create function to take stored procedure and save user information to DumbB
+	//Research Side: Encryption algorithm to store user information Java and DB 
+	//	       Local encrypted file to save user information (Possible DB Information too)
+	//To think about: Create a Login GUI for the user. Get rid of DB Login GUI (Next steps are going to be using cloud base like FireBase DB or AWS)
+	//		Think about user/admin classes and behaviours
+
 
 	private MySQLDriver dbDriver;
 	private Engine engine;
@@ -116,7 +124,6 @@ public class MainGUIController {
 	
 	@FXML
 	public void initialize() {
-		//TODO: Move database login to another window before accessing this one
 		log.info("Initializing Main GUI...");
 		actionsBox.setItems(actions);
 		//		List<TableColumn<MP3Info, String>> tableColumns = getMP3InfoColumns();
