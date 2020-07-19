@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -47,27 +48,26 @@ public class Controller {
 	//from the actions, search mp3, connect to db will go.
 	//TODO: Create use login before accessing the main window. 
 	//TODO: Store user information, (Encryption, hashing and local caching user id)
-	
+
 	private MySQLDriver dbDriver;
 	private Engine engine;
 	private final GUIThreadFactory guiFactory = new GUIThreadFactory("GUI Threads");
 	private ExecutorService service = Executors.newFixedThreadPool(10, guiFactory);
 	private SynchronizedDataContainer container = new SynchronizedDataContainer();
-	
+
 	private ObservableList<String> logger = FXCollections.observableArrayList();
-	
+
 	private final ObservableList<String> actions = FXCollections.observableArrayList(
-			"Upload MP3 to DB", 
-			"Songs in DB",
-			"MP3 info in DB",
+			"Upload MP3 to DB",
+			"Refresh DB",
 			"Generate Report");
-	
+
 	@FXML
 	ComboBox<String> actionsBox;
-	
+
 	@FXML
 	TextField dbConnectionString;
-	
+
 	@FXML
 	TextField dbUsername;
 
@@ -82,25 +82,25 @@ public class Controller {
 
 	@FXML	
 	Button selectFolderButton;
-	
+
 	@FXML
 	Button searchMP3Button;
-	
+
 	@FXML
 	Button startActionButton;
-	
+
 	@FXML
 	Button stopActionButton;
-	
+
 	@FXML
 	TableView<MP3Info> folderTable;
-	
+
 	@FXML
 	TableView<MP3Info> dbTable;
-	
+
 	@FXML
 	ListView<String> logView;
-	
+
 	@FXML
 	Label statusLabel;
 
@@ -112,13 +112,13 @@ public class Controller {
 		//TODO: Move database login to another window before accessing this one
 		log.info("Initializing GUI...");
 		actionsBox.setItems(actions);
-//		List<TableColumn<MP3Info, String>> tableColumns = getMP3InfoColumns();
+		//		List<TableColumn<MP3Info, String>> tableColumns = getMP3InfoColumns();
 		folderTable.getColumns().setAll(getMP3InfoColumns());
 		dbTable.getColumns().setAll(getMP3InfoColumns());
 		logView.setItems(logger);
 		TextAreaAppender.setTextArea(logger);
 	}
-	
+
 	@FXML
 	public void connectToDB() throws SQLException {
 		//		dbDriver = new MySQLDriver();
@@ -160,15 +160,17 @@ public class Controller {
 			PopupMessageError popUp = new PopupMessageError();
 			log.error("Cannot connect to DB", ex);
 			popUp.displayPopUp("DB Error", "Error connecting to DB", 
-								ex.getMessage());
+					ex.getMessage());
 		}
 
 	}
-	
+
 	private void fetchDBInformation() throws SQLException {
 		//TODO: Try catch
-		if (!isDBConnected()) return;
-//		List<MP3Info> dataInDb = dbDriver.getAllDataInDB();
+		if (!isDBConnected()) {
+			PopupMessageWarning warn = new PopupMessageWarning();
+			warn.displayPopUp("Warning", "Databased Disconnected", "Please login to the database to start this action");
+		}
 		DatabaseWorker worker = new DatabaseWorker("DBContainer", dbDriver, null, DBAction.Fetch);
 		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, container);
 		worker.addListener(viewerListener);
@@ -179,13 +181,13 @@ public class Controller {
 		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
 			PopupMessageWarning popUp = new PopupMessageWarning();
 			popUp.displayPopUp("DB Warning", "DB Connection", 
-					 "Please connect to the database before running this action");
+					"Please connect to the database before running this action");
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	@FXML
 	public void searchMP3Files() throws Exception {
 		String rootPath = rootFolder.getText();
@@ -194,7 +196,7 @@ public class Controller {
 			popup.displayPopUp("Root Folder", "Folder Error", "Select a root folder first");
 			return;
 		}
-		
+
 		File path = new File(rootPath);
 		if(path.exists() && path.isDirectory()) {
 			engine = new Engine(path);
@@ -209,14 +211,14 @@ public class Controller {
 			return;
 		}
 	}
-	
+
 	@FXML
 	public void keyPressedHandler(KeyEvent event) throws SQLException {
 		switch(event.getCode()) {
-			case ENTER:
-				connectToDB();
-			default:
-				return;
+		case ENTER:
+			connectToDB();
+		default:
+			return;
 		}
 	}
 
@@ -226,19 +228,18 @@ public class Controller {
 		if(EngineUtilities.isNullorEmpty(actionString)) {
 			PopupMessageWarning popUp = new PopupMessageWarning();
 			popUp.displayPopUp("Action Warning", "Action Missing", 
-						 "Please select an action from the dropdown list");
+					"Please select an action from the dropdown list");
 			return;
 		}
 		int indexAction = actions.indexOf(actionString);
-		
+
 		switch(Action.getAction(indexAction)) {
 			case Upload:
 				uploadToDB();
 				break;
-			case GetSongs:
-				//TODO: Add functionality
-			case GetMP3:
-				//TODO: Add functionality
+			case RefreshDB:
+				refreshDB();
+				break;
 			case GenerateReport:
 				//TODO: Add functionality
 				//Implementation: Excel file in the output folder (decided by the user?), three sheets
@@ -256,13 +257,22 @@ public class Controller {
 		}
 	}	
 
+	private void refreshDB() {
+		DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, 
+													null, DBAction.Upload);
+		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, container);
+		worker.addListener(viewerListener);
+		service.execute(viewerListener);
+	}
+	
+
 	@FXML
 	public void stopAction() throws InterruptedException {
 		service.shutdownNow();
 		service.awaitTermination(5, TimeUnit.SECONDS);
 		service = Executors.newFixedThreadPool(10, guiFactory);
 	}
-	
+
 	@FXML
 	public void chooseRootFolder() {
 		DirectoryChooser dc = new DirectoryChooser();
@@ -283,7 +293,7 @@ public class Controller {
 			}
 		}
 	}
-	
+
 	private void disposeDBConnection() {
 		try {
 			dbDriver.closeConnection();
@@ -296,7 +306,7 @@ public class Controller {
 					"Closing the connection failed " + ex.getStackTrace());
 		}
 	}
-	
+
 	private List<TableColumn<MP3Info, String>> getMP3InfoColumns(){
 		List<TableColumn<MP3Info, String>> columns = new ArrayList<TableColumn<MP3Info, String>>();
 		for(Field field : MP3Info.class.getDeclaredFields()) {
@@ -304,9 +314,9 @@ public class Controller {
 			TableColumn<MP3Info, String> column = new TableColumn<MP3Info, String>(value.value());
 			column.setCellValueFactory(new PropertyValueFactory<MP3Info, String>(field.getName()));
 			columns.add(column);
-//			rootTable.getColumns().add(column);
+			//			rootTable.getColumns().add(column);
 		}
-		
+
 		return ImmutableList.copyOf(columns);
 	}	
 
@@ -314,11 +324,17 @@ public class Controller {
 		if (!isDBConnected()) {
 			return;
 		}
-		DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, 
-													container.getDataList(ContainerType.FolderContainer), 
-													DBAction.Upload);
+		List<MP3Info> dataToUpload = container.setDifferencerRight(ContainerType.DBContainer, ContainerType.FolderContainer);
+		DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, dataToUpload, DBAction.Upload);
 		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, container);
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);
+	}
+
+	private List<MP3Info> generateMP3ToUpload() {
+		
+		
+		
+		return null;
 	}
 }

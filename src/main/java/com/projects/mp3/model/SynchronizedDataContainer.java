@@ -1,5 +1,6 @@
 package com.projects.mp3.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -81,5 +82,24 @@ public final class SynchronizedDataContainer {
 			}
 		}
 		return false;
+	}
+	
+	public List<MP3Info> setDifferencerRight(ContainerType leftType, ContainerType rightType){
+		Set<MP3Info> leftSet = data.get(leftType);
+		Set<MP3Info> rightSet = data.get(rightType);
+		
+		if(leftSet == null || leftSet.size() == 0) {
+			return ImmutableList.copyOf(rightSet);
+		}else {
+			if(rightSet == null) return ImmutableList.copyOf(new ArrayList<MP3Info>());
+			List<MP3Info> notInLeftSet = new ArrayList<MP3Info>();
+			for(MP3Info info : rightSet) {
+				if(!leftSet.contains(info)) {
+					notInLeftSet.add(info);
+				}
+			}
+			
+			return ImmutableList.copyOf(notInLeftSet);
+		}
 	}
 }
