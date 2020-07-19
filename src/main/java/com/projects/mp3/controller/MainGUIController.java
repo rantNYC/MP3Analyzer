@@ -34,9 +34,9 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.DirectoryChooser;
 
-public class Controller {
+public class MainGUIController {
 
-	private static Logger log = LoggerFactory.getLogger(Controller.class);
+	private static Logger log = LoggerFactory.getLogger(MainGUIController.class);
 	//TODO: Play songs from GUI
 	//TODO: Add app dataset with information
 	//TODO: Fetch data from DB action
@@ -107,10 +107,17 @@ public class Controller {
 	@FXML
 	Label connectedToLabel;
 
+	public void setDBInfo(MySQLDriver _dbDriver) throws SQLException {
+		dbDriver = _dbDriver;
+		statusLabel.setText(_dbDriver.getStatus().toString());
+		connectedToLabel.setText(_dbDriver.getConnectionPath());
+		fetchDBInformation();
+	}
+	
 	@FXML
 	public void initialize() {
 		//TODO: Move database login to another window before accessing this one
-		log.info("Initializing GUI...");
+		log.info("Initializing Main GUI...");
 		actionsBox.setItems(actions);
 		//		List<TableColumn<MP3Info, String>> tableColumns = getMP3InfoColumns();
 		folderTable.getColumns().setAll(getMP3InfoColumns());
@@ -145,9 +152,6 @@ public class Controller {
 		}
 
 		try {
-			dbDriver = new MySQLDriver(connection, username, password);
-			connectedToLabel.setText(connection);
-			statusLabel.setText(dbDriver.getStatus().toString());
 			dbConnectionString.setDisable(true);
 			dbUsername.setDisable(true);
 			dbPassword.setDisable(true);

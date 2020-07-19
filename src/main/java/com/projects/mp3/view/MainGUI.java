@@ -1,19 +1,11 @@
 package com.projects.mp3.view;
 
-import java.io.IOException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.projects.mp3.view.stages.LoginStage;
 
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class MainGUI extends Application{
-
-	private static Logger log = LoggerFactory.getLogger(MainGUI.class);
 	
 	protected final int SCREEN_WIDTH   = 900;
 	protected final int SCREEN_HEIGHT  = 600;
@@ -22,20 +14,12 @@ public class MainGUI extends Application{
 		launch(args);
 	}
 
+	public void print() {
+		System.out.println(getClass().getResource("/view/MainGUI.fxml"));
+	}
+	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		try {
-			Parent root = (Parent)FXMLLoader.load(getClass().getResource("MainGUI.fxml"));
-			primaryStage.setTitle("MP3 Analyzer");
-			Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT);
-			primaryStage.setMinHeight(300);
-			primaryStage.setMinWidth(400);
-	        primaryStage.setScene(scene);
-	        primaryStage.show();
-	        
-		} catch (IOException e) {
-			log.error("Error in GUI", e);
-			System.exit(-1);
-		}
+		LoginStage login = new LoginStage();
 	}
 }

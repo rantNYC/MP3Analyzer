@@ -1,13 +1,17 @@
 package com.projects.mp3;
 
-public class Main {
 
+
+public class Main {
+	
 	public static void main(String[] args) throws Exception {
 //		String dir = "D:\\Songs";
 //		Engine engine = new Engine(dir);
 
 //		MySQLDriver driver = new MySQLDriver();
 
+		Print print = new Print();
+		
 //		List<File> files = engine.getMP3Files();
 //		int totalFilesInSystem = files.size();
 //		int totalFilesProcessed = 0;
