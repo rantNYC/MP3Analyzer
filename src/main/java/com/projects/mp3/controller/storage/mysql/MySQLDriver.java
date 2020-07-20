@@ -21,6 +21,7 @@ public class MySQLDriver {
 
 	Connection conn;
 	DBStatus status;
+	String connectionPath;
 
 	private final int TIMEOUT = 120;
 
@@ -33,10 +34,15 @@ public class MySQLDriver {
 	public MySQLDriver(String dbConnection, String username, String password) throws SQLException {
 		conn = DriverManager.getConnection(dbConnection, username, password);
 		status = DBStatus.Connected;
+		connectionPath = dbConnection;
 	}
 
 	public DBStatus getStatus() {
 		return status;
+	}
+	
+	public String getConnectionPath() {
+		return connectionPath;
 	}
 
 	public void insertMP3ToDB(MP3Info mp3Info) throws SQLException {

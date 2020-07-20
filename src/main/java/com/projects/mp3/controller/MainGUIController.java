@@ -34,9 +34,9 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.DirectoryChooser;
 
-public class Controller {
+public class MainGUIController {
 
-	private static Logger log = LoggerFactory.getLogger(Controller.class);
+	private static Logger log = LoggerFactory.getLogger(MainGUIController.class);
 	//TODO: Play songs from GUI
 	//TODO: Add app dataset with information
 	//TODO: Fetch data from DB action
@@ -48,6 +48,14 @@ public class Controller {
 	//from the actions, search mp3, connect to db will go.
 	//TODO: Create use login before accessing the main window. 
 	//TODO: Store user information, (Encryption, hashing and local caching user id)
+	//TODO: DB Side: Modify DB Schema to add User table and MP3Info-User table
+	//	 	Create Stored Procedure to save User information
+	//Java Side: Create function to take stored procedure and save user information to DumbB
+	//Research Side: Encryption algorithm to store user information Java and DB 
+	//	       Local encrypted file to save user information (Possible DB Information too)
+	//To think about: Create a Login GUI for the user. Get rid of DB Login GUI (Next steps are going to be using cloud base like FireBase DB or AWS)
+	//		Think about user/admin classes and behaviours
+
 
 	private MySQLDriver dbDriver;
 	private Engine engine;
@@ -107,10 +115,16 @@ public class Controller {
 	@FXML
 	Label connectedToLabel;
 
+	public void setDBInfo(MySQLDriver _dbDriver) throws SQLException {
+		dbDriver = _dbDriver;
+		statusLabel.setText(_dbDriver.getStatus().toString());
+		connectedToLabel.setText(_dbDriver.getConnectionPath());
+		fetchDBInformation();
+	}
+	
 	@FXML
 	public void initialize() {
-		//TODO: Move database login to another window before accessing this one
-		log.info("Initializing GUI...");
+		log.info("Initializing Main GUI...");
 		actionsBox.setItems(actions);
 		//		List<TableColumn<MP3Info, String>> tableColumns = getMP3InfoColumns();
 		folderTable.getColumns().setAll(getMP3InfoColumns());
@@ -145,9 +159,6 @@ public class Controller {
 		}
 
 		try {
-			dbDriver = new MySQLDriver(connection, username, password);
-			connectedToLabel.setText(connection);
-			statusLabel.setText(dbDriver.getStatus().toString());
 			dbConnectionString.setDisable(true);
 			dbUsername.setDisable(true);
 			dbPassword.setDisable(true);
