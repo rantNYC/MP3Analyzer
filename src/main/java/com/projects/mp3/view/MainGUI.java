@@ -14,10 +14,6 @@ public class MainGUI extends Application{
 		launch(args);
 	}
 
-	public void print() {
-		System.out.println(getClass().getResource("/view/MainGUI.fxml"));
-	}
-	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		LoginStage login = new LoginStage();
