@@ -6,26 +6,30 @@ import com.projects.mp3.model.SynchronizedDataContainer;
 
 import javafx.scene.control.*;
 
-public class TableButtonListener extends ListenerWoker {
-	
+public class TableButtonListener extends ListenerWorker {
+
 	TableView<MP3Info> viewer;
 	Button button;
-	
+
 	public TableButtonListener(TableView<MP3Info> viewer, Button button, NotifyingWorker worker, 
-								SynchronizedDataContainer container) {
+			SynchronizedDataContainer container) {
 		super(worker, container);
 		if(viewer == null) throw new IllegalArgumentException("TableView cannot be null");
 		if(button == null) throw new IllegalArgumentException("Button cannot be null");
 		this.viewer = viewer;
 		this.button = button;
 	}
-	
+
+	public void refreshViewer() {
+		viewer.getItems().clear();
+	}
+
 	@Override
 	public void run() {
 		button.setDisable(true);
 		super.run();
 	}
-	
+
 	@Override
 	public boolean onNewData(MP3Info info) {
 		if(container.addDataToContainer(worker.type, info)) {
@@ -47,7 +51,7 @@ public class TableButtonListener extends ListenerWoker {
 				container.containsDataInContainer(ContainerType.OrphanContainer, info)) {
 			return false;
 		}
-		
+
 		return true;
 	}
 

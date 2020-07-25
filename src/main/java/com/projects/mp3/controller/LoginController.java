@@ -80,11 +80,13 @@ public class LoginController {
 			dbPassword.setDisable(true);
 			//fetchDBInformation();
 			log.info("Succesfully connected to database");
-			
-			MainGUIStage primaryStage = new MainGUIStage(dbDriver);
+			MainGUIStage primaryStage = new MainGUIStage(900, 600, dbDriver, 
+														 getClass().getResource("/FXML/MainGUI.fxml"));
+			primaryStage.startStage();
 			Stage thisStage = (Stage) this.dbConnectionButton.getScene().getWindow();
 			thisStage.close();
 		} catch (Exception ex) {
+			if(dbDriver != null) dbDriver.closeConnection();
 			dbConnectionString.setDisable(false);
 			dbUsername.setDisable(false);
 			dbPassword.setDisable(false);

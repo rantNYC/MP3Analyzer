@@ -1,6 +1,7 @@
 package com.projects.mp3.model;
 
 public enum Action {
+	Search,
 	Upload,
 	RefreshDB,
 	GenerateReport;

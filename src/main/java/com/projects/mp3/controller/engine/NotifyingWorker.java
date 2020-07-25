@@ -3,11 +3,16 @@ package com.projects.mp3.controller.engine;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.MP3Info;
 
 public abstract class NotifyingWorker implements Runnable {
 
+	private static final Logger log = LoggerFactory.getLogger(NotifyingWorker.class);
+	
 	private final Set<IThreadListener> listeners = new CopyOnWriteArraySet<IThreadListener>();
 	private final String name;
 	volatile boolean isInterrupted = false;
@@ -59,7 +64,9 @@ public abstract class NotifyingWorker implements Runnable {
 	}
 
 	public void run() {
+		
 		try {
+			log.info("Executing thread: " + name);
 			execute();
 		}
 		finally {
@@ -72,4 +79,12 @@ public abstract class NotifyingWorker implements Runnable {
 	}
 
 	public abstract void execute();
+	
+	public void interrupt() {
+		isInterrupted = true;
+	}
+	
+	public boolean isInterrupted() {
+		return isInterrupted;
+	}
 }
