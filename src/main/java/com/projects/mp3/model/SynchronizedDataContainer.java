@@ -84,7 +84,7 @@ public final class SynchronizedDataContainer {
 		return false;
 	}
 	
-	public List<MP3Info> setDifferencerRight(ContainerType leftType, ContainerType rightType){
+	public List<MP3Info> getDifferencerRight(ContainerType leftType, ContainerType rightType){
 		Set<MP3Info> leftSet = data.get(leftType);
 		Set<MP3Info> rightSet = data.get(rightType);
 		

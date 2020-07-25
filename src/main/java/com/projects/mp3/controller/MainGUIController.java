@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +18,6 @@ import com.projects.mp3.controller.storage.DBAction;
 import com.projects.mp3.controller.storage.DBStatus;
 import com.projects.mp3.controller.storage.DatabaseWorker;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
-import com.projects.mp3.model.Action;
 import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.MP3Annotation;
 import com.projects.mp3.model.MP3Info;
@@ -38,14 +36,7 @@ public class MainGUIController {
 
 	private static Logger log = LoggerFactory.getLogger(MainGUIController.class);
 	//TODO: Play songs from GUI
-	//TODO: Add app dataset with information
-	//TODO: Fetch data from DB action
 	//TODO: Generate report action
-	//TODO: Move information gathering from the Table view
-	//Soon, we will implement constrain to the display and data will be lost if we
-	//reference the table view. Instead hold that information in other class, and
-	//add it to the viewer when refresh, or something. This class is where the data
-	//from the actions, search mp3, connect to db will go.
 	//TODO: Create use login before accessing the main window. 
 	//TODO: Store user information, (Encryption, hashing and local caching user id)
 	//TODO: DB Side: Modify DB Schema to add User table and MP3Info-User table
@@ -65,14 +56,6 @@ public class MainGUIController {
 
 	private ObservableList<String> logger = FXCollections.observableArrayList();
 
-	private final ObservableList<String> actions = FXCollections.observableArrayList(
-			"Upload MP3 to DB",
-			"Refresh DB",
-			"Generate Report");
-
-	@FXML
-	ComboBox<String> actionsBox;
-
 	@FXML
 	TextField dbConnectionString;
 
@@ -85,21 +68,20 @@ public class MainGUIController {
 	@FXML
 	TextField rootFolder;
 
-	@FXML
-	Button dbConnectionButton;
-
 	@FXML	
 	Button selectFolderButton;
 
 	@FXML
-	Button searchMP3Button;
+	Button startButton;
 
 	@FXML
-	Button startActionButton;
+	Button stopButton;
 
 	@FXML
-	Button stopActionButton;
-
+	Button refreshButton;
+	
+	Button reportButton;
+	
 	@FXML
 	TableView<MP3Info> folderTable;
 
@@ -124,9 +106,7 @@ public class MainGUIController {
 	
 	@FXML
 	public void initialize() {
-		log.info("Initializing Main GUI...");
-		actionsBox.setItems(actions);
-		//		List<TableColumn<MP3Info, String>> tableColumns = getMP3InfoColumns();
+		log.info("Initializing Main GUI and fetching DB...");
 		folderTable.getColumns().setAll(getMP3InfoColumns());
 		dbTable.getColumns().setAll(getMP3InfoColumns());
 		logView.setItems(logger);
@@ -176,18 +156,6 @@ public class MainGUIController {
 
 	}
 
-	private void fetchDBInformation() throws SQLException {
-		//TODO: Try catch
-		if (!isDBConnected()) {
-			PopupMessageWarning warn = new PopupMessageWarning();
-			warn.displayPopUp("Warning", "Databased Disconnected", "Please login to the database to start this action");
-		}
-		DatabaseWorker worker = new DatabaseWorker("DBContainer", dbDriver, null, DBAction.Fetch);
-		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, container);
-		worker.addListener(viewerListener);
-		service.execute(viewerListener);
-	}
-
 	private boolean isDBConnected() {
 		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
 			PopupMessageWarning popUp = new PopupMessageWarning();
@@ -197,30 +165,6 @@ public class MainGUIController {
 		}
 
 		return true;
-	}
-
-	@FXML
-	public void searchMP3Files() throws Exception {
-		String rootPath = rootFolder.getText();
-		if(EngineUtilities.isNullorEmpty(rootPath)) {
-			PopupMessageError popup = new PopupMessageError();
-			popup.displayPopUp("Root Folder", "Folder Error", "Select a root folder first");
-			return;
-		}
-
-		File path = new File(rootPath);
-		if(path.exists() && path.isDirectory()) {
-			engine = new Engine(path);
-			EngineWorker worker = new EngineWorker(ContainerType.FolderContainer.toString(), engine.getMP3Files());
-			ListenerWoker viewerListener = new TableButtonListener(folderTable, searchMP3Button, worker, container);
-			worker.addListener(viewerListener);
-			guiFactory.setWorkerName(viewerListener.getWorkerName());
-			service.execute(viewerListener);
-		}else {
-			PopupMessageError popup = new PopupMessageError();
-			popup.displayPopUp("Root Folder", "Folder Error", "Folder does not exists");
-			return;
-		}
 	}
 
 	@FXML
@@ -234,54 +178,42 @@ public class MainGUIController {
 	}
 
 	@FXML
-	public void startAction() {
-		String actionString = actionsBox.getValue();
-		if(EngineUtilities.isNullorEmpty(actionString)) {
-			PopupMessageWarning popUp = new PopupMessageWarning();
-			popUp.displayPopUp("Action Warning", "Action Missing", 
-					"Please select an action from the dropdown list");
-			return;
-		}
-		int indexAction = actions.indexOf(actionString);
+	public void onStartHandle() throws Exception {
+		//TODO: Wrong need to synchronize
+		ListenerWorker searchWorker = searchMP3Files();
+		ListenerWorker uploadWorker = uploadToDB(searchWorker);
+		
+		service.submit(uploadWorker);
+	}
 
-		switch(Action.getAction(indexAction)) {
-			case Upload:
-				uploadToDB();
-				break;
-			case RefreshDB:
-				refreshDB();
-				break;
-			case GenerateReport:
-				//TODO: Add functionality
-				//Implementation: Excel file in the output folder (decided by the user?), three sheets
-				//One summary, one db report, and one folder report. 
-				//Summary will have information like: How many files in DB, how many files in root folder,
-				//how many files from root are in DB, how many files from DB are in root, and the diff 
-				//between them
-				//DB Sheet will have all the records in the db
-				//Root folder will have all the records in the root folder
-				//All this based on the table view items
-				throw new UnsupportedOperationException("Action not yet implemented");
-			default:
-				//Shouldn't be here
-				return;
-		}
-	}	
-
-	private void refreshDB() {
-		DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, 
-													null, DBAction.Upload);
-		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, container);
+	@FXML
+	public void onReportHandle() {
+		//TODO: Add functionality
+		//Implementation: Excel file in the output folder (decided by the user?), three sheets
+		//One summary, one db report, and one folder report. 
+		//Summary will have information like: How many files in DB, how many files in root folder,
+		//how many files from root are in DB, how many files from DB are in root, and the diff 
+		//between them
+		//DB Sheet will have all the records in the db
+		//Root folder will have all the records in the root folder
+		//All this based on the table view items
+	}
+	
+	@FXML
+	public void onRefreshHandle() {
+		NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Refresh, null);
+		TableButtonListener viewerListener = new TableButtonListener(this.dbTable, refreshButton, worker, container);
+		viewerListener.refreshViewer();
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);
 	}
 	
-
 	@FXML
-	public void stopAction() throws InterruptedException {
+	public void onStopHandle() throws InterruptedException {
 		service.shutdownNow();
 		service.awaitTermination(5, TimeUnit.SECONDS);
 		service = Executors.newFixedThreadPool(10, guiFactory);
+		log.info("Program Stopped...");
 	}
 
 	@FXML
@@ -305,16 +237,14 @@ public class MainGUIController {
 		}
 	}
 
-	private void disposeDBConnection() {
+	public void disposeDBConnection() {
 		try {
+//			if(dbDriver == null) return;
 			dbDriver.closeConnection();
-			dbConnectionString.setDisable(false);
-			dbUsername.setDisable(false);
-			dbPassword.setDisable(false);
 		} catch (Exception ex) {
 			PopupMessageError popUp = new PopupMessageError();
 			popUp.displayPopUp("DB Error", "Fatal Error",
-					"Closing the connection failed " + ex.getStackTrace());
+					"Closing the connection failed " + ex.getMessage());
 		}
 	}
 
@@ -331,21 +261,49 @@ public class MainGUIController {
 		return ImmutableList.copyOf(columns);
 	}	
 
-	private void uploadToDB() {
+	private ListenerWorker uploadToDB(ListenerWorker searchListener) {
 		if (!isDBConnected()) {
-			return;
+			return null;
 		}
-		List<MP3Info> dataToUpload = container.setDifferencerRight(ContainerType.DBContainer, ContainerType.FolderContainer);
-		DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, dataToUpload, DBAction.Upload);
-		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, container);
+		NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, searchListener);
+		ListenerWorker viewerListener = new TableButtonListener(this.dbTable, startButton, worker, container);
+		worker.addListener(viewerListener);
+		return viewerListener;
+	}
+
+	private void fetchDBInformation() throws SQLException {
+		//TODO: Try catch
+		if (!isDBConnected()) {
+			PopupMessageWarning warn = new PopupMessageWarning();
+			warn.displayPopUp("Warning", "Databased Disconnected", "Please login to the database to start this action");
+		}
+		NotifyingWorker worker = new DatabaseWorker("DBContainer", dbDriver, DBAction.Fetch, null);
+		ListenerWorker viewerListener = new TableButtonListener(this.dbTable, startButton, worker, container);
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);
 	}
 
-	private List<MP3Info> generateMP3ToUpload() {
-		
-		
-		
-		return null;
+	private ListenerWorker searchMP3Files() throws Exception {
+		String rootPath = rootFolder.getText();
+		if(EngineUtilities.isNullorEmpty(rootPath)) {
+			PopupMessageError popup = new PopupMessageError();
+			popup.displayPopUp("Root Folder", "Folder Error", "Select a root folder first");
+			return null;
+		}
+
+		File path = new File(rootPath);
+		if(path.exists() && path.isDirectory()) {
+			engine = new Engine(path);
+			NotifyingWorker worker = new EngineWorker(ContainerType.FolderContainer.toString(), engine.getMP3Files());
+			ListenerWorker viewerListener = new TableButtonListener(folderTable, startButton, worker, container);
+			worker.addListener(viewerListener);
+			guiFactory.setWorkerName(viewerListener.getWorkerName());
+			return viewerListener;
+		}else {
+			PopupMessageError popup = new PopupMessageError();
+			popup.displayPopUp("Root Folder", "Folder Error", "Folder does not exists");
+			return null;
+		}
 	}
+	
 }

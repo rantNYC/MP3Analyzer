@@ -23,8 +23,6 @@ public class MySQLDriver {
 	DBStatus status;
 	String connectionPath;
 
-	private final int TIMEOUT = 120;
-
 	//	public MySQLDriver() throws SQLException {
 	//		conn = DriverManager.getConnection(connectionString, username, password);
 	//		status = DBStatus.Connected;
@@ -53,7 +51,7 @@ public class MySQLDriver {
 			throw new IllegalArgumentException(String.format("Artist name %s cannot be null or empty in %s", mp3Info, mp3Info.getPath()));
 
 		try (CallableStatement statement = conn.prepareCall("{call insert_info(?, ?, ? , ?, ?, ?, ?, ?, ?)}")){
-			statement.setQueryTimeout(TIMEOUT);
+			statement.setQueryTimeout(EngineUtilities.TIMEOUT_SECONDS);
 			statement.setString(1, mp3Info.getSongName());
 			statement.setString(2, mp3Info.getArtistName());
 			statement.setString(3, mp3Info.getAlbum());
@@ -73,7 +71,7 @@ public class MySQLDriver {
 	public List<MP3Info> getAllDataInDB() throws SQLException{
 		List<MP3Info> data = new ArrayList<MP3Info>();
 		try (CallableStatement statement = conn.prepareCall("{call select_all_info}")){
-			statement.setQueryTimeout(TIMEOUT);
+			statement.setQueryTimeout(EngineUtilities.TIMEOUT_SECONDS);
 
 			ResultSet rs = statement.executeQuery();
 			while(rs.next()) {

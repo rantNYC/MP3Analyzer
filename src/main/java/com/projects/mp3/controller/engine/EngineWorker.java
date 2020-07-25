@@ -12,25 +12,20 @@ public class EngineWorker extends NotifyingWorker{
 
 	private static final Logger log = LoggerFactory.getLogger(EngineWorker.class);
 	
-	private final String workerName;
 	private final List<File> mp3Files;
 //	private final Engine engine;
 	
 	public EngineWorker(String name, final List<File> mp3Files) {
 		super(name, ContainerType.FolderContainer);
-		if(!EngineUtilities.isNullorEmpty(name))
-			workerName = name;
-		else
-			workerName = "Unknown";
 		this.mp3Files = mp3Files;
 	}
 
 	@Override
 	public void execute() {
-		log.info("Executing thread: " + workerName);
 		for(File file : mp3Files) {
 			if(Thread.currentThread().isInterrupted()) {
 				log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
+				this.interrupt();
 				return;
 			}
 			//TODO: Handle millions of rows

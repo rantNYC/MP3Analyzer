@@ -12,7 +12,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-12">
 		<attributes>
 			<attribute name="module" value="true"/>
-			<attribute name="limit-modules" value="jdk.httpserver,jdk.jartool,jdk.management.jfr,jdk.net,jdk.sctp,jdk.security.auth,jdk.security.jgss,jdk.charsets,jdk.pack,jdk.xml.dom,jdk.rmic,jdk.jstatd,jdk.jcmd,java.se,jdk.zipfs,jdk.jshell,jdk.editpad,jdk.jsobject,java.smartcardio,jdk.jlink,jdk.scripting.nashorn.shell,jdk.unsupported.desktop,jdk.accessibility,jdk.hotspot.agent,jdk.crypto.cryptoki,jdk.naming.rmi,jdk.jconsole,jdk.crypto.mscapi,jdk.internal.vm.compiler.management,jdk.aot,jdk.naming.dns,jdk.localedata"/>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
