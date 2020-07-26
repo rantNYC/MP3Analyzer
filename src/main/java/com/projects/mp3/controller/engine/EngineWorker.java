@@ -5,6 +5,7 @@ import java.util.*	;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.MP3Info;
 
@@ -20,6 +21,10 @@ public class EngineWorker extends NotifyingWorker{
 		this.mp3Files = mp3Files;
 	}
 
+	public List<File> getMp3Files() {
+		return ImmutableList.copyOf(mp3Files);
+	}
+	
 	@Override
 	public void execute() {
 		for(File file : mp3Files) {
@@ -43,6 +48,4 @@ public class EngineWorker extends NotifyingWorker{
 			}
 		}
 	}
-	
-
 }

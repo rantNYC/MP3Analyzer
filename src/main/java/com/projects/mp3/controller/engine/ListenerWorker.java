@@ -32,4 +32,6 @@ public abstract class ListenerWorker implements IThreadListener, Runnable {
 	public ContainerType getWorkerContainer() {
 		return worker.type;
 	}
+
+	public abstract void executeLogic();
 }

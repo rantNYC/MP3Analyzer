@@ -8,4 +8,5 @@ public interface IThreadListener {
 	boolean onNewData(final MP3Info info);
 	boolean verifyDataUnique(final MP3Info info);
 	void onNewDataError(final MP3Info info);
+	void singleProcessFinish();
 }

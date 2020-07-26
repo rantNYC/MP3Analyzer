@@ -27,9 +27,10 @@ import com.projects.mp3.view.TextAreaAppender;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.KeyEvent;
 import javafx.stage.DirectoryChooser;
 
 public class MainGUIController {
@@ -47,7 +48,8 @@ public class MainGUIController {
 	//To think about: Create a Login GUI for the user. Get rid of DB Login GUI (Next steps are going to be using cloud base like FireBase DB or AWS)
 	//		Think about user/admin classes and behaviours
 
-
+	private Scene scene;
+	
 	private MySQLDriver dbDriver;
 	private Engine engine;
 	private final GUIThreadFactory guiFactory = new GUIThreadFactory("GUI Threads");
@@ -55,15 +57,6 @@ public class MainGUIController {
 	private SynchronizedDataContainer container = new SynchronizedDataContainer();
 
 	private ObservableList<String> logger = FXCollections.observableArrayList();
-
-	@FXML
-	TextField dbConnectionString;
-
-	@FXML
-	TextField dbUsername;
-
-	@FXML
-	PasswordField dbPassword;
 
 	@FXML
 	TextField rootFolder;
@@ -97,6 +90,24 @@ public class MainGUIController {
 	@FXML
 	Label connectedToLabel;
 
+	@FXML
+	Label numRootFilesLabel;
+
+	@FXML
+	Label numDBFilesLabel;
+
+	@FXML
+	Label numFailedFilesLabel;
+
+	@FXML
+	Label numFilesSuccededLabel;
+
+	@FXML
+	Label percentageLabel;
+
+	@FXML
+	ProgressBar progressBar;
+	
 	public void setDBInfo(MySQLDriver _dbDriver) throws SQLException {
 		dbDriver = _dbDriver;
 		statusLabel.setText(_dbDriver.getStatus().toString());
@@ -107,6 +118,7 @@ public class MainGUIController {
 	@FXML
 	public void initialize() {
 		log.info("Initializing Main GUI and fetching DB...");
+		scene = this.startButton.getScene();
 		folderTable.getColumns().setAll(getMP3InfoColumns());
 		dbTable.getColumns().setAll(getMP3InfoColumns());
 		logView.setItems(logger);
@@ -114,76 +126,11 @@ public class MainGUIController {
 	}
 
 	@FXML
-	public void connectToDB() throws SQLException {
-		//		dbDriver = new MySQLDriver();
-		String connection = dbConnectionString.getText();
-		String username = dbUsername.getText();
-		String password = dbPassword.getText();
-
-		if(EngineUtilities.isNullorEmpty(connection)) {
-			PopupMessageError popUp = new PopupMessageError();
-			popUp.displayPopUp("DB Error", "Connection Error", "Database url cannot be empty");
-			return;
-		}
-
-		if(EngineUtilities.isNullorEmpty(username)) {
-			PopupMessageError popUp = new PopupMessageError();
-			popUp.displayPopUp("DB Error", "Username Error", "User cannot be empty");
-			return;
-		}
-
-		if(EngineUtilities.isNullorEmpty(password)) {
-			PopupMessageError popUp = new PopupMessageError();
-			popUp.displayPopUp("DB Error", "Password Error", "User cannot be empty");
-			return;
-		}
-
-		try {
-			dbConnectionString.setDisable(true);
-			dbUsername.setDisable(true);
-			dbPassword.setDisable(true);
-			fetchDBInformation();
-			log.info("Succesfully connected to database");
-		} catch (Exception ex) {
-			dbConnectionString.setDisable(false);
-			dbUsername.setDisable(false);
-			dbPassword.setDisable(false);
-			PopupMessageError popUp = new PopupMessageError();
-			log.error("Cannot connect to DB", ex);
-			popUp.displayPopUp("DB Error", "Error connecting to DB", 
-					ex.getMessage());
-		}
-
-	}
-
-	private boolean isDBConnected() {
-		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
-			PopupMessageWarning popUp = new PopupMessageWarning();
-			popUp.displayPopUp("DB Warning", "DB Connection", 
-					"Please connect to the database before running this action");
-			return false;
-		}
-
-		return true;
-	}
-
-	@FXML
-	public void keyPressedHandler(KeyEvent event) throws SQLException {
-		switch(event.getCode()) {
-		case ENTER:
-			connectToDB();
-		default:
-			return;
-		}
-	}
-
-	@FXML
 	public void onStartHandle() throws Exception {
-		//TODO: Wrong need to synchronize
-		ListenerWorker searchWorker = searchMP3Files();
-		ListenerWorker uploadWorker = uploadToDB(searchWorker);
-		
-		service.submit(uploadWorker);
+		percentageLabel.setText("0.00%");
+		ListenerWorker uploader = uploadToDB();
+		if(uploader == null) return;
+		service.submit(uploader);
 	}
 
 	@FXML
@@ -202,8 +149,7 @@ public class MainGUIController {
 	@FXML
 	public void onRefreshHandle() {
 		NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Refresh, null);
-		TableButtonListener viewerListener = new TableButtonListener(this.dbTable, refreshButton, worker, container);
-		viewerListener.refreshViewer();
+		ControllerListener viewerListener = new ControllerListener(dbTable, startButton, worker, container);
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);
 	}
@@ -248,6 +194,21 @@ public class MainGUIController {
 		}
 	}
 
+	public void refreshFolderViewer() {
+		folderTable.getItems().clear();
+	}
+	
+	public void refreshDBViewer() {
+		dbTable.getItems().clear();
+	}
+	
+	public Node lookup(String name) {
+		if(EngineUtilities.isNullorEmpty(name)) return null;
+		if(scene == null) return null;
+		
+		return scene.lookup(name);
+	}
+	
 	private List<TableColumn<MP3Info, String>> getMP3InfoColumns(){
 		List<TableColumn<MP3Info, String>> columns = new ArrayList<TableColumn<MP3Info, String>>();
 		for(Field field : MP3Info.class.getDeclaredFields()) {
@@ -261,29 +222,11 @@ public class MainGUIController {
 		return ImmutableList.copyOf(columns);
 	}	
 
-	private ListenerWorker uploadToDB(ListenerWorker searchListener) {
+	private ListenerWorker uploadToDB() {
 		if (!isDBConnected()) {
 			return null;
 		}
-		NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, searchListener);
-		ListenerWorker viewerListener = new TableButtonListener(this.dbTable, startButton, worker, container);
-		worker.addListener(viewerListener);
-		return viewerListener;
-	}
-
-	private void fetchDBInformation() throws SQLException {
-		//TODO: Try catch
-		if (!isDBConnected()) {
-			PopupMessageWarning warn = new PopupMessageWarning();
-			warn.displayPopUp("Warning", "Databased Disconnected", "Please login to the database to start this action");
-		}
-		NotifyingWorker worker = new DatabaseWorker("DBContainer", dbDriver, DBAction.Fetch, null);
-		ListenerWorker viewerListener = new TableButtonListener(this.dbTable, startButton, worker, container);
-		worker.addListener(viewerListener);
-		service.execute(viewerListener);
-	}
-
-	private ListenerWorker searchMP3Files() throws Exception {
+		
 		String rootPath = rootFolder.getText();
 		if(EngineUtilities.isNullorEmpty(rootPath)) {
 			PopupMessageError popup = new PopupMessageError();
@@ -294,16 +237,45 @@ public class MainGUIController {
 		File path = new File(rootPath);
 		if(path.exists() && path.isDirectory()) {
 			engine = new Engine(path);
-			NotifyingWorker worker = new EngineWorker(ContainerType.FolderContainer.toString(), engine.getMP3Files());
-			ListenerWorker viewerListener = new TableButtonListener(folderTable, startButton, worker, container);
+			NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, engine.getMP3Files());
+			ControllerListener viewerListener = new ControllerListener(dbTable, startButton, worker, container);
+			numRootFilesLabel.setText(engine.getNumFiles()+"");
+			viewerListener.setTotal(engine.getNumFiles());
+			viewerListener.setBarLabel(percentageLabel);
+			viewerListener.setProgressBar(progressBar);
+			viewerListener.setFailLabel(numFailedFilesLabel);
+			viewerListener.setSuccessLabel(numFilesSuccededLabel);
 			worker.addListener(viewerListener);
-			guiFactory.setWorkerName(viewerListener.getWorkerName());
 			return viewerListener;
 		}else {
 			PopupMessageError popup = new PopupMessageError();
 			popup.displayPopUp("Root Folder", "Folder Error", "Folder does not exists");
 			return null;
 		}
+	}
+
+	private void fetchDBInformation() throws SQLException {
+		//TODO: Try catch
+		if (!isDBConnected()) {
+			PopupMessageWarning warn = new PopupMessageWarning();
+			warn.displayPopUp("Warning", "Databased Disconnected", "Please login to the database to start this action");
+		}
+		numDBFilesLabel.setText(container.getSizeContainer(ContainerType.DBContainer)+"");
+		NotifyingWorker worker = new DatabaseWorker("DBContainer", dbDriver, DBAction.Fetch, null);
+		ListenerWorker viewerListener = new ControllerListener(dbTable, startButton, worker, container);
+		worker.addListener(viewerListener);
+		service.execute(viewerListener);
+	}
+
+	private boolean isDBConnected() {
+		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
+			PopupMessageWarning popUp = new PopupMessageWarning();
+			popUp.displayPopUp("DB Warning", "DB Connection", 
+					"Please connect to the database before running this action");
+			return false;
+		}
+
+		return true;
 	}
 	
 }

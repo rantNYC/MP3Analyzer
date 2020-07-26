@@ -33,6 +33,12 @@ public class Engine {
 		if(!dir.isDirectory()) throw new IllegalArgumentException(String.format("Input %s is not a directory", dir));
 	}
 	
+	private void generateMP3Files() {
+		//TODO: Deal with more formats
+		log.info("Processing: " + dir);
+		mp3Files = (List<File>) FileUtils.listFiles(dir, new RegexFileFilter(".+\\.mp3"), DirectoryFileFilter.DIRECTORY);
+	}
+	
 	public List<File> getMP3Files() {
 		if(mp3Files == null) {
 			generateMP3Files();
@@ -42,9 +48,7 @@ public class Engine {
 		}
 	}
 	
-	private void generateMP3Files() {
-		//TODO: Deal with more formats
-		log.info("Processing: " + dir);
-		mp3Files = (List<File>) FileUtils.listFiles(dir, new RegexFileFilter(".+\\.mp3"), DirectoryFileFilter.DIRECTORY);
+	public int getNumFiles() {
+		return mp3Files == null ? 0 : mp3Files.size();
 	}
 }

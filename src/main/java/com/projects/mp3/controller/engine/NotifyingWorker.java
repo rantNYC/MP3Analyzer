@@ -23,9 +23,11 @@ public abstract class NotifyingWorker implements Runnable {
 	public final void addListener(final IThreadListener listener) {
 		listeners.add(listener);
 	}
+	
 	public final void removeListener(final IThreadListener listener) {
 		listeners.remove(listener);
 	}
+	
 	private final void notifyFinishThread() {
 		for (IThreadListener listener : listeners) {
 			listener.onThreadFinished(this);
@@ -51,6 +53,12 @@ public abstract class NotifyingWorker implements Runnable {
 	protected final void notifyNewDataError(MP3Info info) {
 		for (IThreadListener listener : listeners) {
 			listener.onNewDataError(info);
+		}
+	}
+	
+	protected final void notifySingleProcessFinish() {
+		for(IThreadListener listener : listeners) {
+			listener.singleProcessFinish();
 		}
 	}
 	

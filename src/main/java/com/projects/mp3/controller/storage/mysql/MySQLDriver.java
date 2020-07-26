@@ -44,11 +44,8 @@ public class MySQLDriver {
 	}
 
 	public void insertMP3ToDB(MP3Info mp3Info) throws SQLException {
-		if(EngineUtilities.isNullorEmpty(mp3Info.getSongName())) 
-			throw new IllegalArgumentException(String.format("Song name %s cannot be null or empty in %s", mp3Info, mp3Info.getPath()));
-
-		if(EngineUtilities.isNullorEmpty(mp3Info.getArtistName())) 
-			throw new IllegalArgumentException(String.format("Artist name %s cannot be null or empty in %s", mp3Info, mp3Info.getPath()));
+		if(EngineUtilities.isNullorEmpty(mp3Info.getSongName()) || EngineUtilities.isNullorEmpty(mp3Info.getArtistName())) 
+			throw new IllegalArgumentException(String.format("%s contains null for primary keys", mp3Info));
 
 		try (CallableStatement statement = conn.prepareCall("{call insert_info(?, ?, ? , ?, ?, ?, ?, ?, ?)}")){
 			statement.setQueryTimeout(EngineUtilities.TIMEOUT_SECONDS);

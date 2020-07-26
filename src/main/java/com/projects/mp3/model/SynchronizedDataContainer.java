@@ -102,4 +102,9 @@ public final class SynchronizedDataContainer {
 			return ImmutableList.copyOf(notInLeftSet);
 		}
 	}
+
+	public int getSizeContainer(ContainerType name) {
+		if (data == null || !data.containsKey(name) || data.get(name) == null) return 0;
+		else return data.get(name).size();
+	}
 }
