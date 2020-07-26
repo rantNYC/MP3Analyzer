@@ -16,4 +16,12 @@ public class EngineUtilities {
 	public static boolean isNullorEmpty(String s) {
 		return s == null || s.isEmpty() || s.isBlank();
 	}
+	
+	public static int tryParseInt(String value, int defaultVal) {
+	    try {
+	        return Integer.parseInt(value);
+	    } catch (NumberFormatException e) {
+	        return defaultVal;
+	    }
+	}
 }

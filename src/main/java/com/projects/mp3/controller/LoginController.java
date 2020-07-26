@@ -115,28 +115,4 @@ public class LoginController {
 		System.exit(0);
 	}
 
-	
-//	private void fetchDBInformation() throws SQLException {
-//		//TODO: Try catch
-//		if (!isDBConnected()) {
-//			PopupMessageWarning warn = new PopupMessageWarning();
-//			warn.displayPopUp("Warning", "Databased Disconnected", "Please login to the database to start this action");
-//		}
-//		DatabaseWorker worker = new DatabaseWorker("DBContainer", dbDriver, null, DBAction.Fetch);
-//		ListenerWoker viewerListener = new TableButtonListener(this.dbTable, startActionButton, worker, container);
-//		worker.addListener(viewerListener);
-//		service.execute(viewerListener);
-//	}
-	
-//	private boolean isDBConnected() {
-//		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
-//			PopupMessageWarning popUp = new PopupMessageWarning();
-//			popUp.displayPopUp("DB Warning", "DB Connection", 
-//					"Please connect to the database before running this action");
-//			return false;
-//		}
-//
-//		return true;
-//	}
-
 }

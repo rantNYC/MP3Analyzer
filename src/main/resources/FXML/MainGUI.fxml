@@ -17,7 +17,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.projects.mp3.controller.MainGUIController">
 	<children>
 		<VBox minHeight="200.0" minWidth="300.0" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -75,13 +74,13 @@
                                     <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="5.0">
                                        <children>
                                           <Label minWidth="-Infinity" prefWidth="150.0" text="MP3 Files in Root Folder:" />
-                                          <Label minWidth="-Infinity" prefWidth="50.0" text="0" />
+                                          <Label fx:id="numRootFilesLabel" minWidth="-Infinity" prefWidth="50.0" text="0" />
                                        </children>
                                     </HBox>
                                     <HBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="100.0" prefWidth="200.0" spacing="5.0" GridPane.rowIndex="1">
                                        <children>
                                           <Label minWidth="-Infinity" prefWidth="150.0" text="MP3 Files in database:" />
-                                          <Label minWidth="-Infinity" prefWidth="50.0" text="0" />
+                                          <Label fx:id="numDBFilesLabel" minWidth="-Infinity" prefWidth="50.0" text="0" />
                                        </children>
                                     </HBox>
                                     <HBox alignment="CENTER" layoutX="10.0" layoutY="64.0" prefHeight="100.0" prefWidth="200.0" spacing="5.0" GridPane.rowIndex="2">
@@ -89,13 +88,13 @@
                                           <HBox alignment="CENTER" prefHeight="38.0" prefWidth="145.0">
                                              <children>
                                                 <Label minWidth="-Infinity" prefHeight="18.0" prefWidth="100.0" text="Files Failed: " />
-                                                <Label alignment="TOP_LEFT" contentDisplay="TOP" minWidth="-Infinity" prefWidth="50.0" text="0" />
+                                                <Label fx:id="numFailedFilesLabel" alignment="TOP_LEFT" contentDisplay="TOP" minWidth="-Infinity" prefWidth="50.0" text="0" />
                                              </children>
                                           </HBox>
                                           <HBox alignment="CENTER" prefHeight="38.0" prefWidth="53.0">
                                              <children>
                                                 <Label minWidth="-Infinity" prefHeight="18.0" prefWidth="100.0" text="Files Succeded" />
-                                                <Label minWidth="-Infinity" prefWidth="50.0" text="0" />
+                                                <Label fx:id="numFilesSuccededLabel" minWidth="-Infinity" prefWidth="50.0" text="0" />
                                              </children>
                                           </HBox>
                                        </children>
@@ -103,12 +102,12 @@
                                     <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="5.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.valignment="CENTER">
                                        <children>
                                           <Label minWidth="-Infinity" prefWidth="50.0" text="Progress:" />
-                                          <ProgressBar maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="634.0" progress="0.0" HBox.hgrow="ALWAYS">
+                                          <ProgressBar fx:id="progressBar" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="634.0" progress="0.0" HBox.hgrow="ALWAYS">
                                              <HBox.margin>
                                                 <Insets />
                                              </HBox.margin>
                                           </ProgressBar>
-                                          <Label minWidth="-Infinity" prefWidth="50.0" text="100.00%" />
+                                          <Label fx:id="percentageLabel" minWidth="-Infinity" prefWidth="50.0" text="0.00%" />
                                        </children>
                                        <padding>
                                           <Insets bottom="5.0" left="5.0" right="5.0" />
@@ -136,7 +135,7 @@
 									<content>
 										<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="600.0">
 											<children>
-												<TableView fx:id="dbTable" prefHeight="260.0" prefWidth="902.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="-2.0" AnchorPane.topAnchor="0.0">
+												<TableView id="dbTable" fx:id="dbTable" prefHeight="260.0" prefWidth="902.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="-2.0" AnchorPane.topAnchor="0.0">
 													<columnResizePolicy>
 														<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
 													</columnResizePolicy>

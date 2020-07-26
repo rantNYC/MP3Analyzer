@@ -1,16 +1,12 @@
 package com.projects.mp3.controller.storage;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.projects.mp3.controller.engine.EngineUtilities;
-import com.projects.mp3.controller.engine.ListenerWorker;
+import com.projects.mp3.controller.engine.MP3Decoder;
 import com.projects.mp3.controller.engine.NotifyingWorker;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.model.ContainerType;
@@ -24,14 +20,14 @@ public class DatabaseWorker extends NotifyingWorker {
 
 	private MySQLDriver driver;
 	private DBAction action;
-	private ListenerWorker subRoutine; 
+	private List<File> mp3Files; 
 
-	public DatabaseWorker(String name, MySQLDriver driver, DBAction action, ListenerWorker subRoutine) {
+	public DatabaseWorker(String name, MySQLDriver driver, DBAction action, List<File> mp3Files) {
 		super(name, ContainerType.DBContainer);
 		if(driver == null) throw new IllegalArgumentException("DB driver cannot be null");
 		this.driver = driver;
 		this.action = action;
-		this.subRoutine = subRoutine;
+		this.mp3Files = mp3Files;
 	}
 
 	@Override
@@ -55,39 +51,22 @@ public class DatabaseWorker extends NotifyingWorker {
 	}
 
 	private void executeUpload() {
-		if(subRoutine == null) {
+		if(mp3Files == null) {
 			log.warn("Cannot upload without searching first");
 			return;
 		}
-
-		ExecutorService service = Executors.newSingleThreadExecutor();
-		service.submit(subRoutine);
-		try {
-			service.awaitTermination(EngineUtilities.TIMEOUT_SECONDS, TimeUnit.SECONDS);
-		} catch (InterruptedException e1) {
-			log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
-			service.shutdownNow();
-			this.interrupt();
-			return;
-		}
 		
-		List<MP3Info> data = subRoutine.getDifferencerRight(type, subRoutine.getWorkerContainer());
-		for(MP3Info info : data) {
-			if(!notifyDataUnique(info)) {
-				log.warn(String.format("%s exists in DB already", info.toString()));
-				continue;
-			}
+		for(File file : mp3Files) {
 			if(Thread.currentThread().isInterrupted()) {
 				log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
 				this.interrupt();
 				return;
 			}
+			//TODO: Handle millions of rows
+			MP3Decoder decoder = new MP3Decoder(file.getAbsolutePath());
+			MP3Info info = null;
 			try {
-				if(EngineUtilities.isNullorEmpty(info.getSongName()) ||
-						EngineUtilities.isNullorEmpty(info.getArtistName())) {
-					log.warn(String.format("Cannot insert %s because it contains null for primary keys", info.toString()));
-					continue;
-				}
+				info = decoder.decodeInformation();
 				driver.insertMP3ToDB(info);
 				if(notifyNewDataThread(info)) {
 					log.info(String.format("Data %s was sucessfully added", info.toString()));
@@ -95,8 +74,10 @@ public class DatabaseWorker extends NotifyingWorker {
 					log.warn(String.format("Data %s already exists", info.toString()));
 				}
 			} catch (Exception e) {
-				//				notifyNewDataError(info);
-				log.error("Cannot insert data to DB " + info.toString(), e);
+				notifyNewDataError(info);
+				log.error("Error processing: " + file, e);
+			} finally {
+				notifySingleProcessFinish();
 			}
 		}
 	}
@@ -109,7 +90,7 @@ public class DatabaseWorker extends NotifyingWorker {
 				return;
 			}
 			if(notifyNewDataThread(info)) {
-				log.info(String.format("Data %s was sucessfully added", info.toString()));
+				log.info(String.format("Data %s was sucessfully fetched", info.toString()));
 			}else {					
 				log.warn(String.format("Data %s already exists", info.toString()));
 			}
