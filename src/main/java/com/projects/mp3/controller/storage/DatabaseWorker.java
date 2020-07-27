@@ -70,13 +70,13 @@ public class DatabaseWorker extends NotifyingWorker {
 				if(decoder.isAudioFile(file)) {
 					info = decoder.decodeInformation(file);
 					if(NotifyaddDataToContainer(ContainerType.FolderContainer, info)) {
-						log.info(String.format("Data %s was sucessfully added to %", 
+						log.info(String.format("Data %s was sucessfully added to %s", 
 												info.toString(),ContainerType.FolderContainer));
 					}else {					
 						log.warn(String.format("Data %s already exists in %s", 
 												info.toString(),ContainerType.FolderContainer));
 					}
-					
+					//TODO: Take care of duplicated values
 					driver.insertMP3ToDB(info);
 					if(notifyNewDataThread(info)) {
 						log.info(String.format("Data %s was sucessfully added", info.toString()));
