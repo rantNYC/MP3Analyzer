@@ -1,92 +1,78 @@
 package com.projects.mp3.controller.engine;
 
 import com.projects.mp3.model.ContainerType;
-import com.projects.mp3.model.MP3Info;
+import com.projects.mp3.controller.MainGUIController;
+import com.projects.mp3.model.AudioInfo;
 import com.projects.mp3.model.SynchronizedDataContainer;
-
-import javafx.application.Platform;
-import javafx.scene.control.*;
 
 public class ControllerListener extends ListenerWorker {
 
 	private boolean shouldEnableButton = true;
 	
-	private TableView<MP3Info> viewer;
-	private Button btn;
-	private ProgressBar bar;
-	private Label barLabel;
-	private Label sucessLabel;
-	private Label failLabel;
+//	private TableView<AudioInfo> folderViewer;
+//	private Button btn;
+//	private ProgressBar bar;
+//	private Label barLabel;
+//	private Label sucessLabel;
+//	private Label failLabel;
+	private MainGUIController controller;
 	private int successCounter;
 	private int failCounter;;
 	private double counter;
 	private double total;
 	
-	public ControllerListener(TableView<MP3Info> viewer, Button btn, 
+	public ControllerListener(MainGUIController controller,
 								NotifyingWorker worker, SynchronizedDataContainer container) {
 		super(worker, container);
-		if(btn == null) throw new IllegalArgumentException("Button cannot be null");
-		if(viewer == null) throw new IllegalArgumentException("Table View cannot be null");
-		this.viewer = viewer;
-		this.btn = btn;
+		if(controller == null) throw new IllegalArgumentException("Controller cannot be null");
+		this.controller = controller;
 		counter = 0;
 		total = 0;
 	}
 
-	public void setProgressBar(ProgressBar bar) {
-		if(bar == null) throw new IllegalArgumentException("Progress bar cannot be null");
-		this.bar = bar;
-	}
+//	public void setProgressBar(ProgressBar bar) {
+//		if(bar == null) throw new IllegalArgumentException("Progress bar cannot be null");
+//		this.bar = bar;
+//	}
 	
-	public void setBarLabel(Label barLabel) {
-		if(barLabel == null) throw new IllegalArgumentException("Bar label cannot be null");
-		this.barLabel = barLabel;
-	}
+//	public void setBarLabel(Label barLabel) {
+//		if(barLabel == null) throw new IllegalArgumentException("Bar label cannot be null");
+//		this.barLabel = barLabel;
+//	}
 	
-	public void setSuccessLabel(Label sucessLabel) {
-		if(sucessLabel == null) throw new IllegalArgumentException("Success label cannot be null");
-		this.sucessLabel = sucessLabel;
-		successCounter = EngineUtilities.tryParseInt(sucessLabel.getText(), 0);
-	}
+//	public void setSuccessLabel(Label sucessLabel) {
+//		if(sucessLabel == null) throw new IllegalArgumentException("Success label cannot be null");
+//		this.sucessLabel = sucessLabel;
+//		successCounter = EngineUtilities.tryParseInt(sucessLabel.getText(), 0);
+//	}
 	
-	public void setFailLabel(Label failLabel) {
-		if(failLabel == null) throw new IllegalArgumentException("Failure label cannot be null");
-		this.failLabel = failLabel;
-		failCounter = EngineUtilities.tryParseInt(failLabel.getText(), 0);
-	}
+//	public void setFailLabel(Label failLabel) {
+//		if(failLabel == null) throw new IllegalArgumentException("Failure label cannot be null");
+//		this.failLabel = failLabel;
+//		failCounter = EngineUtilities.tryParseInt(failLabel.getText(), 0);
+//	}
 	
-	public void refreshViewer() {
-		viewer.getItems().clear();
+	public void refreshDBViewer() {
+		controller.refreshDBGUI();
 	}
 	
 	public void setTotal(int total) {
 		if(total > 0) this.total = total;
 	}
 	
-	public void disableButton() {
-		btn.setDisable(true);
-	}
-	
-	public void enableButton() {
-		btn.setDisable(false);
-	}
 	
 	@Override
 	public void run() {
-		disableButton();
+		controller.disableStartButton();
 		super.run();
 	}
 	
 	@Override
-	public boolean onNewData(MP3Info info) {
-		if(sucessLabel != null) {
-			Platform.runLater(() -> {
-				sucessLabel.setText(++successCounter+"");
-			});
-		}
+	public boolean onNewData(AudioInfo info) {
+		controller.runThreadSafe(() -> controller.setSuccessLabel(++successCounter));
 		
 		if(container.addDataToContainer(worker.type, info)) {
-			viewer.getItems().add(info);
+			controller.setDBTableInfo(info);
 			return true;
 		} else {
 			return false;
@@ -95,11 +81,11 @@ public class ControllerListener extends ListenerWorker {
 	
 	@Override
 	public void onThreadFinished(NotifyingWorker notifyingThread) {
-		if(shouldEnableButton) enableButton();
+		if(shouldEnableButton) controller.enableStartButton();
 	}
 	
 	@Override
-	public boolean verifyDataUnique(MP3Info info) {
+	public boolean verifyDataUnique(AudioInfo info) {
 		if(container.containsDataInContainer(worker.type, info) ||
 				container.containsDataInContainer(ContainerType.OrphanContainer, info)) {
 			return false;
@@ -109,13 +95,9 @@ public class ControllerListener extends ListenerWorker {
 	}
 
 	@Override
-	public void onNewDataError(MP3Info info) {
+	public void onNewDataError(AudioInfo info) {
 		container.addDataToContainer(ContainerType.OrphanContainer, info);
-		if(failLabel != null) {
-			Platform.runLater(() -> {
-				failLabel.setText(++failCounter+"");
-			});
-		}
+		controller.runThreadSafe(() -> controller.setFailedLabel(++failCounter));
 	}
 	
 	@Override
@@ -126,12 +108,17 @@ public class ControllerListener extends ListenerWorker {
 
 	@Override
 	public void singleProcessFinish() {
-		if(bar != null && barLabel != null && total > 0) {
-			double timer = ++counter/total ;
-			Platform.runLater(() -> {
-				barLabel.setText(String.format("%.2f%%", timer*100));
-				bar.setProgress(timer);
-			});
+		double timer = ++counter/total;
+		controller.runThreadSafe(() -> controller.setProgressBar(timer));
+	}
+
+	@Override
+	public boolean addDataToContainer(ContainerType type, AudioInfo info) {
+		if(container.addDataToContainer(type, info)) {
+			controller.setFolderTableInfo(info);
+			return true;
+		}else {
+			return false;
 		}
 	}
 }

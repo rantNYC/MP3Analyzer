@@ -3,7 +3,7 @@ package com.projects.mp3.controller.engine;
 import java.util.List;
 
 import com.projects.mp3.model.ContainerType;
-import com.projects.mp3.model.MP3Info;
+import com.projects.mp3.model.AudioInfo;
 import com.projects.mp3.model.SynchronizedDataContainer;
 
 public abstract class ListenerWorker implements IThreadListener, Runnable {
@@ -25,7 +25,7 @@ public abstract class ListenerWorker implements IThreadListener, Runnable {
 		return worker.getName();
 	}
 	
-	public List<MP3Info> getDifferencerRight(ContainerType leftType, ContainerType rightType) {
+	public List<AudioInfo> getDifferencerRight(ContainerType leftType, ContainerType rightType) {
 		return container.getDifferencerRight(leftType, rightType);
 	}
 	

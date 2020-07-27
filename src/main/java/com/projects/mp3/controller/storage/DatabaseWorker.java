@@ -6,11 +6,12 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.projects.mp3.controller.engine.MP3Decoder;
 import com.projects.mp3.controller.engine.NotifyingWorker;
+import com.projects.mp3.controller.engine.decoder.Decoder;
+import com.projects.mp3.controller.engine.decoder.IDecoder;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.model.ContainerType;
-import com.projects.mp3.model.MP3Info;
+import com.projects.mp3.model.AudioInfo;
 
 public class DatabaseWorker extends NotifyingWorker {
 
@@ -33,20 +34,20 @@ public class DatabaseWorker extends NotifyingWorker {
 	@Override
 	public void execute() {
 		switch(action) {
-			case Fetch:
-			case Refresh:
-				try {
-					executeFetching();
-				} catch (SQLException e) {
-					log.error("Error updating the Database", e);
-				}
-				return;
-			case Upload:
-				executeUpload();
-				return;
-			default:
-				log.debug("Nothing to execute in default");
-				return;
+		case Fetch:
+		case Refresh:
+			try {
+				executeFetching();
+			} catch (SQLException e) {
+				log.error("Error updating the Database", e);
+			}
+			return;
+		case Upload:
+			executeUpload();
+			return;
+		default:
+			log.debug("Nothing to execute in default");
+			return;
 		}
 	}
 
@@ -55,7 +56,7 @@ public class DatabaseWorker extends NotifyingWorker {
 			log.warn("Cannot upload without searching first");
 			return;
 		}
-		
+
 		for(File file : mp3Files) {
 			if(Thread.currentThread().isInterrupted()) {
 				log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
@@ -63,15 +64,27 @@ public class DatabaseWorker extends NotifyingWorker {
 				return;
 			}
 			//TODO: Handle millions of rows
-			MP3Decoder decoder = new MP3Decoder(file.getAbsolutePath());
-			MP3Info info = null;
+			IDecoder decoder = new Decoder();
+			AudioInfo info = null;
 			try {
-				info = decoder.decodeInformation();
-				driver.insertMP3ToDB(info);
-				if(notifyNewDataThread(info)) {
-					log.info(String.format("Data %s was sucessfully added", info.toString()));
-				}else {					
-					log.warn(String.format("Data %s already exists", info.toString()));
+				if(decoder.isAudioFile(file)) {
+					info = decoder.decodeInformation(file);
+					if(NotifyaddDataToContainer(ContainerType.FolderContainer, info)) {
+						log.info(String.format("Data %s was sucessfully added to %", 
+												info.toString(),ContainerType.FolderContainer));
+					}else {					
+						log.warn(String.format("Data %s already exists in %s", 
+												info.toString(),ContainerType.FolderContainer));
+					}
+					
+					driver.insertMP3ToDB(info);
+					if(notifyNewDataThread(info)) {
+						log.info(String.format("Data %s was sucessfully added", info.toString()));
+					}else {					
+						log.warn(String.format("Data %s already exists", info.toString()));
+					}
+				} else {
+					log.warn(String.format("File %s is not an audio type", file));
 				}
 			} catch (Exception e) {
 				notifyNewDataError(info);
@@ -83,8 +96,8 @@ public class DatabaseWorker extends NotifyingWorker {
 	}
 
 	private void executeFetching() throws SQLException {
-		List<MP3Info> dbData = driver.getAllDataInDB();
-		for(MP3Info info : dbData) {
+		List<AudioInfo> dbData = driver.getAllDataInDB();
+		for(AudioInfo info : dbData) {
 			if(Thread.currentThread().isInterrupted()) {
 				log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
 				return;

@@ -19,11 +19,11 @@ import com.projects.mp3.controller.storage.DBStatus;
 import com.projects.mp3.controller.storage.DatabaseWorker;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.model.ContainerType;
-import com.projects.mp3.model.MP3Annotation;
-import com.projects.mp3.model.MP3Info;
+import com.projects.mp3.model.AudioFileAnnotation;
+import com.projects.mp3.model.AudioInfo;
 import com.projects.mp3.model.SynchronizedDataContainer;
 import com.projects.mp3.view.TextAreaAppender;
-
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -40,7 +40,7 @@ public class MainGUIController {
 	//TODO: Generate report action
 	//TODO: Create use login before accessing the main window. 
 	//TODO: Store user information, (Encryption, hashing and local caching user id)
-	//TODO: DB Side: Modify DB Schema to add User table and MP3Info-User table
+	//TODO: DB Side: Modify DB Schema to add User table and AudioInfo-User table
 	//	 	Create Stored Procedure to save User information
 	//Java Side: Create function to take stored procedure and save user information to DumbB
 	//Research Side: Encryption algorithm to store user information Java and DB 
@@ -76,10 +76,10 @@ public class MainGUIController {
 	Button reportButton;
 	
 	@FXML
-	TableView<MP3Info> folderTable;
+	TableView<AudioInfo> folderTable;
 
 	@FXML
-	TableView<MP3Info> dbTable;
+	TableView<AudioInfo> dbTable;
 
 	@FXML
 	ListView<String> logView;
@@ -97,10 +97,10 @@ public class MainGUIController {
 	Label numDBFilesLabel;
 
 	@FXML
-	Label numFailedFilesLabel;
+	Label numFailFilesLabel;
 
 	@FXML
-	Label numFilesSuccededLabel;
+	Label numSuccedFilesLabel;
 
 	@FXML
 	Label percentageLabel;
@@ -119,8 +119,8 @@ public class MainGUIController {
 	public void initialize() {
 		log.info("Initializing Main GUI and fetching DB...");
 		scene = this.startButton.getScene();
-		folderTable.getColumns().setAll(getMP3InfoColumns());
-		dbTable.getColumns().setAll(getMP3InfoColumns());
+		folderTable.getColumns().setAll(getAudioInfoColumns());
+		dbTable.getColumns().setAll(getAudioInfoColumns());
 		logView.setItems(logger);
 		TextAreaAppender.setTextArea(logger);
 	}
@@ -149,7 +149,7 @@ public class MainGUIController {
 	@FXML
 	public void onRefreshHandle() {
 		NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Refresh, null);
-		ControllerListener viewerListener = new ControllerListener(dbTable, startButton, worker, container);
+		ControllerListener viewerListener = new ControllerListener(this, worker, container);
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);
 	}
@@ -209,12 +209,12 @@ public class MainGUIController {
 		return scene.lookup(name);
 	}
 	
-	private List<TableColumn<MP3Info, String>> getMP3InfoColumns(){
-		List<TableColumn<MP3Info, String>> columns = new ArrayList<TableColumn<MP3Info, String>>();
-		for(Field field : MP3Info.class.getDeclaredFields()) {
-			MP3Annotation value = field.getAnnotation(MP3Annotation.class);
-			TableColumn<MP3Info, String> column = new TableColumn<MP3Info, String>(value.value());
-			column.setCellValueFactory(new PropertyValueFactory<MP3Info, String>(field.getName()));
+	private List<TableColumn<AudioInfo, String>> getAudioInfoColumns(){
+		List<TableColumn<AudioInfo, String>> columns = new ArrayList<TableColumn<AudioInfo, String>>();
+		for(Field field : AudioInfo.class.getDeclaredFields()) {
+			AudioFileAnnotation value = field.getAnnotation(AudioFileAnnotation.class);
+			TableColumn<AudioInfo, String> column = new TableColumn<AudioInfo, String>(value.value());
+			column.setCellValueFactory(new PropertyValueFactory<AudioInfo, String>(field.getName()));
 			columns.add(column);
 			//			rootTable.getColumns().add(column);
 		}
@@ -237,14 +237,10 @@ public class MainGUIController {
 		File path = new File(rootPath);
 		if(path.exists() && path.isDirectory()) {
 			engine = new Engine(path);
-			NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, engine.getMP3Files());
-			ControllerListener viewerListener = new ControllerListener(dbTable, startButton, worker, container);
+			NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, engine.getAllFiles());
+			ControllerListener viewerListener = new ControllerListener(this, worker, container);
 			numRootFilesLabel.setText(engine.getNumFiles()+"");
 			viewerListener.setTotal(engine.getNumFiles());
-			viewerListener.setBarLabel(percentageLabel);
-			viewerListener.setProgressBar(progressBar);
-			viewerListener.setFailLabel(numFailedFilesLabel);
-			viewerListener.setSuccessLabel(numFilesSuccededLabel);
 			worker.addListener(viewerListener);
 			return viewerListener;
 		}else {
@@ -262,7 +258,7 @@ public class MainGUIController {
 		}
 		numDBFilesLabel.setText(container.getSizeContainer(ContainerType.DBContainer)+"");
 		NotifyingWorker worker = new DatabaseWorker("DBContainer", dbDriver, DBAction.Fetch, null);
-		ListenerWorker viewerListener = new ControllerListener(dbTable, startButton, worker, container);
+		ListenerWorker viewerListener = new ControllerListener(this, worker, container);
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);
 	}
@@ -276,6 +272,67 @@ public class MainGUIController {
 		}
 
 		return true;
+	}
+	
+	public void refreshDBGUI() {
+		dbTable.getItems().clear();
+	}
+	
+	public void disableStartButton() {
+		startButton.setDisable(true);
+	}
+	
+	public void enableStartButton() {
+		startButton.setDisable(false);
+	}
+	
+	public void runThreadSafe(Runnable function) {
+		if(Platform.isFxApplicationThread()) {
+			function.run();
+		}else {
+			Platform.runLater(function);
+		}
+	}
+	
+	public void setProgressBar(double num) {
+		double finalNum;
+		if(num > 1) {
+			finalNum = 1;
+		} else if(num < 0) {
+			finalNum = 0;
+		}else {
+			finalNum = num;
+		}
+		if(Platform.isFxApplicationThread()) {
+			percentageLabel.setText(String.format("%.2f%%", finalNum*100));
+			progressBar.setProgress(finalNum);
+		}else {
+			Platform.runLater(() -> {
+				percentageLabel.setText(String.format("%.2f%%", finalNum*100));
+				progressBar.setProgress(finalNum);
+			});
+		}
+
+	}
+	
+	public void setDBTableInfo(AudioInfo info) {
+		//TODO: For now add both, then separate
+		dbTable.getItems().add(info);
+//		folderTable.getItems().add(info);
+	}
+	
+	public void setFolderTableInfo(AudioInfo info) {
+		//TODO: For now add both, then separate
+//		dbTable.getItems().add(info);
+		folderTable.getItems().add(info);
+	}
+	
+	public void setFailedLabel(int num) {
+		numFailFilesLabel.setText(num+"");
+	}
+	
+	public void setSuccessLabel(int num) {
+		numSuccedFilesLabel.setText(num+"");
 	}
 	
 }

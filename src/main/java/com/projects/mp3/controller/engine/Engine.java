@@ -15,7 +15,7 @@ public class Engine {
 	private static final Logger log = LoggerFactory.getLogger(Engine.class);
 	
 	File dir;
-	List<File> mp3Files;
+	List<File> files;
 	
 	public Engine(String dir) {
 		File posDir = new File(dir);
@@ -33,22 +33,21 @@ public class Engine {
 		if(!dir.isDirectory()) throw new IllegalArgumentException(String.format("Input %s is not a directory", dir));
 	}
 	
-	private void generateMP3Files() {
-		//TODO: Deal with more formats
+	private void getFilesFromDirectory() {
 		log.info("Processing: " + dir);
-		mp3Files = (List<File>) FileUtils.listFiles(dir, new RegexFileFilter(".+\\.mp3"), DirectoryFileFilter.DIRECTORY);
+		files = (List<File>) FileUtils.listFiles(dir, new RegexFileFilter(".+\\..+"), DirectoryFileFilter.DIRECTORY);
 	}
 	
-	public List<File> getMP3Files() {
-		if(mp3Files == null) {
-			generateMP3Files();
-			return new ArrayList<File>(mp3Files);
+	public List<File> getAllFiles() {
+		if(files == null) {
+			getFilesFromDirectory();
+			return new ArrayList<File>(files);
 		}else {
-			return new ArrayList<File>(mp3Files);
+			return new ArrayList<File>(files);
 		}
 	}
 	
 	public int getNumFiles() {
-		return mp3Files == null ? 0 : mp3Files.size();
+		return files == null ? 0 : files.size();
 	}
 }
