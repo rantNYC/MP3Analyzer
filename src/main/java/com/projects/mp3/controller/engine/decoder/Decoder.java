@@ -2,6 +2,9 @@ package com.projects.mp3.controller.engine.decoder;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.tika.Tika;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
@@ -33,7 +36,7 @@ public class Decoder implements IDecoder{
 //		if(!this.fileToDecode.exists()) 
 //			throw new IllegalArgumentException(String.format("MP3File %s does not exists", fileToDecode));
 	}
-	
+		
 	@Override
 	public boolean isAudioFile(File file) {
 		try {
@@ -43,7 +46,7 @@ public class Decoder implements IDecoder{
 				return true;
 			}
 		} catch (Exception ex) {
-			log.error(String.format("Error chcecking if %s is audio file", file), ex);
+			log.error(String.format("Error checking if %s is audio file", file), ex);
 		}
 		
 		return false;
@@ -63,6 +66,23 @@ public class Decoder implements IDecoder{
 			if(inputstream != null) inputstream.close();
 			log.info("Finished processing file: " + audioFile.getAbsolutePath());
 		}
+	}
+	
+	@Override
+	public AudioInfo parseFileName(AudioInfo audioInfo) {
+		String fileName = new File(audioInfo.getPath()).getName();
+		//TODO: Maybe have a file with known parsers?
+		//TODO: Faster pre-compile all possible patterns
+		Pattern pattern = Pattern.compile("(.+?)(?=-).(.+?)(?=\\(|\\[)");
+		Matcher matcher = pattern.matcher(fileName);
+		if(matcher.find()) {
+			String songName = matcher.group(2);
+			String artistName = matcher.group(1);
+			return new AudioInfo(songName == null ? null : songName.trim(), artistName == null ? null : artistName.trim(),
+									audioInfo.getAlbum(), audioInfo.getGenre(),	audioInfo.getBitRate(), audioInfo.getPath(), audioInfo.getDuration(), audioInfo.getSizeMb());
+		}
+		
+		return audioInfo;
 	}
 	
 }

@@ -15,14 +15,14 @@ import com.google.common.collect.Sets;
 public final class SynchronizedDataContainer {
 
 	Map<ContainerType, Set<AudioInfo>> data;
-	
+
 	public SynchronizedDataContainer() {
 		this.data = new ConcurrentHashMap<ContainerType, Set<AudioInfo>>();
 		for(ContainerType type : ContainerType.values()) {
 			data.put(type, Sets.newConcurrentHashSet());
 		}
 	}
-	
+
 	public boolean addConcurrentSet(ContainerType name, Set<AudioInfo> set) {
 		if(name == null || set == null) {
 			return false;
@@ -34,15 +34,15 @@ public final class SynchronizedDataContainer {
 		}else {
 			data.put(name, Sets.newConcurrentHashSet(set));
 		}
-		
+
 		return true;
 	}
-	
+
 	public boolean addDataToContainer(ContainerType name, AudioInfo info) {
 		if(name == null || info == null) {
 			return false;
 		}
-		
+
 		if(data.containsKey(name)) {
 			Set<AudioInfo> dataInContainer = data.get(name);
 			if(dataInContainer == null) data.put(name, Sets.newConcurrentHashSet());
@@ -52,18 +52,18 @@ public final class SynchronizedDataContainer {
 			inData.add(info);
 			data.put(name, Sets.newConcurrentHashSet(inData));
 		}
-		
+
 		return true;
 	}
-	
+
 	public Set<AudioInfo> getDataSet(ContainerType name){
 		if(!data.containsKey(name)) {
 			return null;
 		}
-		
+
 		return ImmutableSet.copyOf(data.get(name));
 	}
-	
+
 	public List<AudioInfo> getDataList(ContainerType name){
 		Set<AudioInfo> data = getDataSet(name);
 		return data == null ? null : ImmutableList.copyOf(data);
@@ -76,18 +76,16 @@ public final class SynchronizedDataContainer {
 	}
 
 	public boolean containsDataInContainer(ContainerType name, AudioInfo info) {
-		if(data.containsKey(name)) {
-			if(data.get(name) != null) {
-				return data.get(name).contains(info);
-			}
+		if(data.containsKey(name) && data.get(name) != null) {
+			return data.get(name).contains(info);
 		}
 		return false;
 	}
-	
+
 	public List<AudioInfo> getDifferencerRight(ContainerType leftType, ContainerType rightType){
 		Set<AudioInfo> leftSet = data.get(leftType);
 		Set<AudioInfo> rightSet = data.get(rightType);
-		
+
 		if(leftSet == null || leftSet.size() == 0) {
 			return ImmutableList.copyOf(rightSet);
 		}else {
@@ -98,7 +96,7 @@ public final class SynchronizedDataContainer {
 					notInLeftSet.add(info);
 				}
 			}
-			
+
 			return ImmutableList.copyOf(notInLeftSet);
 		}
 	}
@@ -106,5 +104,9 @@ public final class SynchronizedDataContainer {
 	public int getSizeContainer(ContainerType name) {
 		if (data == null || !data.containsKey(name) || data.get(name) == null) return 0;
 		else return data.get(name).size();
+	}
+
+	public void dropContainerInfo(ContainerType dbcontainer) {
+		data.computeIfPresent(dbcontainer, (k,l) -> Sets.newConcurrentHashSet());
 	}
 }

@@ -21,8 +21,9 @@ public class DatabaseWorker extends NotifyingWorker {
 
 	private MySQLDriver driver;
 	private DBAction action;
-	private List<File> mp3Files; 
-
+	private List<File> mp3Files;
+	private boolean parseFileNameifInfoNull = false;
+	
 	public DatabaseWorker(String name, MySQLDriver driver, DBAction action, List<File> mp3Files) {
 		super(name, ContainerType.DBContainer);
 		if(driver == null) throw new IllegalArgumentException("DB driver cannot be null");
@@ -31,6 +32,10 @@ public class DatabaseWorker extends NotifyingWorker {
 		this.mp3Files = mp3Files;
 	}
 
+	public void setEnableFileNameParsing(boolean enableFileNameParsing) {
+		this.parseFileNameifInfoNull = enableFileNameParsing;
+	}
+	
 	@Override
 	public void execute() {
 		switch(action) {
@@ -76,12 +81,16 @@ public class DatabaseWorker extends NotifyingWorker {
 						log.warn(String.format("Data %s already exists in %s", 
 												info.toString(),ContainerType.FolderContainer));
 					}
-					//TODO: Take care of duplicated values
-					driver.insertMP3ToDB(info);
-					if(notifyNewDataThread(info)) {
-						log.info(String.format("Data %s was sucessfully added", info.toString()));
-					}else {					
-						log.warn(String.format("Data %s already exists", info.toString()));
+					if(notifyDataUnique(info)) {
+						if(info.getSongName() == null && info.getArtistName() == null &&
+								parseFileNameifInfoNull) {
+							info = decoder.parseFileName(info);
+						}
+						driver.insertMP3ToDB(info);
+						notifyNewDataThread(info);
+					}
+					else {
+						log.warn(String.format("Data %s already in %s", info, type));
 					}
 				} else {
 					log.warn(String.format("File %s is not an audio type", file));

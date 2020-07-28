@@ -9,12 +9,6 @@ public class ControllerListener extends ListenerWorker {
 
 	private boolean shouldEnableButton = true;
 	
-//	private TableView<AudioInfo> folderViewer;
-//	private Button btn;
-//	private ProgressBar bar;
-//	private Label barLabel;
-//	private Label sucessLabel;
-//	private Label failLabel;
 	private MainGUIController controller;
 	private int successCounter;
 	private int failCounter;;
@@ -29,28 +23,6 @@ public class ControllerListener extends ListenerWorker {
 		counter = 0;
 		total = 0;
 	}
-
-//	public void setProgressBar(ProgressBar bar) {
-//		if(bar == null) throw new IllegalArgumentException("Progress bar cannot be null");
-//		this.bar = bar;
-//	}
-	
-//	public void setBarLabel(Label barLabel) {
-//		if(barLabel == null) throw new IllegalArgumentException("Bar label cannot be null");
-//		this.barLabel = barLabel;
-//	}
-	
-//	public void setSuccessLabel(Label sucessLabel) {
-//		if(sucessLabel == null) throw new IllegalArgumentException("Success label cannot be null");
-//		this.sucessLabel = sucessLabel;
-//		successCounter = EngineUtilities.tryParseInt(sucessLabel.getText(), 0);
-//	}
-	
-//	public void setFailLabel(Label failLabel) {
-//		if(failLabel == null) throw new IllegalArgumentException("Failure label cannot be null");
-//		this.failLabel = failLabel;
-//		failCounter = EngineUtilities.tryParseInt(failLabel.getText(), 0);
-//	}
 	
 	public void refreshDBViewer() {
 		controller.refreshDBGUI();

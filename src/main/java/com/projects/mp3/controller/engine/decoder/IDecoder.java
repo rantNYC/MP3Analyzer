@@ -7,4 +7,5 @@ import com.projects.mp3.model.AudioInfo;
 public interface IDecoder {
 	AudioInfo decodeInformation(File audioFile) throws Exception;
 	boolean isAudioFile(File file);
+	AudioInfo parseFileName(AudioInfo audioInfo);
 }

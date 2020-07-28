@@ -108,6 +108,9 @@ public class MainGUIController {
 	@FXML
 	ProgressBar progressBar;
 	
+	@FXML
+	CheckBox enableNameParsingCheckBox;
+	
 	public void setDBInfo(MySQLDriver _dbDriver) throws SQLException {
 		dbDriver = _dbDriver;
 		statusLabel.setText(_dbDriver.getStatus().toString());
@@ -150,6 +153,8 @@ public class MainGUIController {
 	public void onRefreshHandle() {
 		NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Refresh, null);
 		ControllerListener viewerListener = new ControllerListener(this, worker, container);
+		container.dropContainerInfo(ContainerType.DBContainer);
+		viewerListener.refreshDBViewer();
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);
 	}
@@ -237,11 +242,12 @@ public class MainGUIController {
 		File path = new File(rootPath);
 		if(path.exists() && path.isDirectory()) {
 			engine = new Engine(path);
-			NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, engine.getAllFiles());
+			DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, engine.getAllFiles());
 			ControllerListener viewerListener = new ControllerListener(this, worker, container);
 			numRootFilesLabel.setText(engine.getNumFiles()+"");
 			viewerListener.setTotal(engine.getNumFiles());
 			worker.addListener(viewerListener);
+			worker.setEnableFileNameParsing(enableNameParsingCheckBox.isSelected());
 			return viewerListener;
 		}else {
 			PopupMessageError popup = new PopupMessageError();
@@ -316,14 +322,10 @@ public class MainGUIController {
 	}
 	
 	public void setDBTableInfo(AudioInfo info) {
-		//TODO: For now add both, then separate
 		dbTable.getItems().add(info);
-//		folderTable.getItems().add(info);
 	}
 	
 	public void setFolderTableInfo(AudioInfo info) {
-		//TODO: For now add both, then separate
-//		dbTable.getItems().add(info);
 		folderTable.getItems().add(info);
 	}
 	
