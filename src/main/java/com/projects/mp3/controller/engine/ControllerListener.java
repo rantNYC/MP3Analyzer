@@ -54,6 +54,8 @@ public class ControllerListener extends ListenerWorker {
 	@Override
 	public void onThreadFinished(NotifyingWorker notifyingThread) {
 		if(shouldEnableButton) controller.enableStartButton();
+		controller.runThreadSafe(() -> controller.setNumDBFiles(container.getSizeContainer(ContainerType.DBContainer)));
+		controller.runThreadSafe(() -> controller.setNumRootFiles(container.getSizeContainer(ContainerType.FolderContainer)));
 	}
 	
 	@Override

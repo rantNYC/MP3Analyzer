@@ -116,6 +116,7 @@ public class MainGUIController {
 		statusLabel.setText(_dbDriver.getStatus().toString());
 		connectedToLabel.setText(_dbDriver.getConnectionPath());
 		fetchDBInformation();
+		setNumDBFiles(container.getSizeContainer(ContainerType.DBContainer));
 	}
 	
 	@FXML
@@ -130,7 +131,8 @@ public class MainGUIController {
 
 	@FXML
 	public void onStartHandle() throws Exception {
-		percentageLabel.setText("0.00%");
+		//percentageLabel.setText("0.00%");
+		resetStats();
 		ListenerWorker uploader = uploadToDB();
 		if(uploader == null) return;
 		service.submit(uploader);
@@ -151,6 +153,7 @@ public class MainGUIController {
 	
 	@FXML
 	public void onRefreshHandle() {
+		resetStats();
 		NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Refresh, null);
 		ControllerListener viewerListener = new ControllerListener(this, worker, container);
 		container.dropContainerInfo(ContainerType.DBContainer);
@@ -214,72 +217,6 @@ public class MainGUIController {
 		return scene.lookup(name);
 	}
 	
-	private List<TableColumn<AudioInfo, String>> getAudioInfoColumns(){
-		List<TableColumn<AudioInfo, String>> columns = new ArrayList<TableColumn<AudioInfo, String>>();
-		for(Field field : AudioInfo.class.getDeclaredFields()) {
-			AudioFileAnnotation value = field.getAnnotation(AudioFileAnnotation.class);
-			TableColumn<AudioInfo, String> column = new TableColumn<AudioInfo, String>(value.value());
-			column.setCellValueFactory(new PropertyValueFactory<AudioInfo, String>(field.getName()));
-			columns.add(column);
-			//			rootTable.getColumns().add(column);
-		}
-
-		return ImmutableList.copyOf(columns);
-	}	
-
-	private ListenerWorker uploadToDB() {
-		if (!isDBConnected()) {
-			return null;
-		}
-		
-		String rootPath = rootFolder.getText();
-		if(EngineUtilities.isNullorEmpty(rootPath)) {
-			PopupMessageError popup = new PopupMessageError();
-			popup.displayPopUp("Root Folder", "Folder Error", "Select a root folder first");
-			return null;
-		}
-
-		File path = new File(rootPath);
-		if(path.exists() && path.isDirectory()) {
-			engine = new Engine(path);
-			DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, engine.getAllFiles());
-			ControllerListener viewerListener = new ControllerListener(this, worker, container);
-			numRootFilesLabel.setText(engine.getNumFiles()+"");
-			viewerListener.setTotal(engine.getNumFiles());
-			worker.addListener(viewerListener);
-			worker.setEnableFileNameParsing(enableNameParsingCheckBox.isSelected());
-			return viewerListener;
-		}else {
-			PopupMessageError popup = new PopupMessageError();
-			popup.displayPopUp("Root Folder", "Folder Error", "Folder does not exists");
-			return null;
-		}
-	}
-
-	private void fetchDBInformation() throws SQLException {
-		//TODO: Try catch
-		if (!isDBConnected()) {
-			PopupMessageWarning warn = new PopupMessageWarning();
-			warn.displayPopUp("Warning", "Databased Disconnected", "Please login to the database to start this action");
-		}
-		numDBFilesLabel.setText(container.getSizeContainer(ContainerType.DBContainer)+"");
-		NotifyingWorker worker = new DatabaseWorker("DBContainer", dbDriver, DBAction.Fetch, null);
-		ListenerWorker viewerListener = new ControllerListener(this, worker, container);
-		worker.addListener(viewerListener);
-		service.execute(viewerListener);
-	}
-
-	private boolean isDBConnected() {
-		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
-			PopupMessageWarning popUp = new PopupMessageWarning();
-			popUp.displayPopUp("DB Warning", "DB Connection", 
-					"Please connect to the database before running this action");
-			return false;
-		}
-
-		return true;
-	}
-	
 	public void refreshDBGUI() {
 		dbTable.getItems().clear();
 	}
@@ -336,5 +273,85 @@ public class MainGUIController {
 	public void setSuccessLabel(int num) {
 		numSuccedFilesLabel.setText(num+"");
 	}
+
+	public void setNumRootFiles(int num) {
+		numRootFilesLabel.setText(num+"");
+	}
 	
+	public void setNumDBFiles(int num) {
+		numDBFilesLabel.setText(num+"");
+	}
+	
+	private List<TableColumn<AudioInfo, String>> getAudioInfoColumns(){
+		List<TableColumn<AudioInfo, String>> columns = new ArrayList<TableColumn<AudioInfo, String>>();
+		for(Field field : AudioInfo.class.getDeclaredFields()) {
+			AudioFileAnnotation value = field.getAnnotation(AudioFileAnnotation.class);
+			TableColumn<AudioInfo, String> column = new TableColumn<AudioInfo, String>(value.value());
+			column.setCellValueFactory(new PropertyValueFactory<AudioInfo, String>(field.getName()));
+			columns.add(column);
+			//			rootTable.getColumns().add(column);
+		}
+
+		return ImmutableList.copyOf(columns);
+	}	
+
+	private ListenerWorker uploadToDB() {
+		if (!isDBConnected()) {
+			return null;
+		}
+		
+		String rootPath = rootFolder.getText();
+		if(EngineUtilities.isNullorEmpty(rootPath)) {
+			PopupMessageError popup = new PopupMessageError();
+			popup.displayPopUp("Root Folder", "Folder Error", "Select a root folder first");
+			return null;
+		}
+
+		File path = new File(rootPath);
+		if(path.exists() && path.isDirectory()) {
+			engine = new Engine(path);
+			DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, engine.getAllFiles());
+			ControllerListener viewerListener = new ControllerListener(this, worker, container);
+			viewerListener.setTotal(engine.getNumFiles());
+			worker.addListener(viewerListener);
+			worker.setEnableFileNameParsing(enableNameParsingCheckBox.isSelected());
+			return viewerListener;
+		}else {
+			PopupMessageError popup = new PopupMessageError();
+			popup.displayPopUp("Root Folder", "Folder Error", "Folder does not exists");
+			return null;
+		}
+	}
+
+	private void fetchDBInformation() throws SQLException {
+		//TODO: Try catch
+		if (!isDBConnected()) {
+			PopupMessageWarning warn = new PopupMessageWarning();
+			warn.displayPopUp("Warning", "Databased Disconnected", "Please login to the database to start this action");
+		}
+		numDBFilesLabel.setText(container.getSizeContainer(ContainerType.DBContainer)+"");
+		NotifyingWorker worker = new DatabaseWorker("DBContainer", dbDriver, DBAction.Fetch, null);
+		ListenerWorker viewerListener = new ControllerListener(this, worker, container);
+		worker.addListener(viewerListener);
+		service.execute(viewerListener);
+	}
+
+	private boolean isDBConnected() {
+		if(dbDriver == null || dbDriver.getStatus() != DBStatus.Connected) {
+			PopupMessageWarning popUp = new PopupMessageWarning();
+			popUp.displayPopUp("DB Warning", "DB Connection", 
+					"Please connect to the database before running this action");
+			return false;
+		}
+
+		return true;
+	}
+	
+	private void resetStats() {
+		setProgressBar(0);
+		setNumRootFiles(0);
+		setNumDBFiles(0);
+		setSuccessLabel(0);
+		setFailedLabel(0);
+	}
 }
