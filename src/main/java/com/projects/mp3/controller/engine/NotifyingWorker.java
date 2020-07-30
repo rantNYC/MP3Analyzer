@@ -6,8 +6,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.projects.mp3.model.AudioInfo;
 import com.projects.mp3.model.ContainerType;
-import com.projects.mp3.model.MP3Info;
 
 public abstract class NotifyingWorker implements Runnable {
 
@@ -33,8 +33,9 @@ public abstract class NotifyingWorker implements Runnable {
 			listener.onThreadFinished(this);
 		}
 	}
-
-	protected final boolean notifyNewDataThread(MP3Info info) {
+	
+	//TODO: Maybe use addDataToContainer instead of this
+	protected final boolean notifyNewDataThread(AudioInfo info) {
 		for (IThreadListener listener : listeners) {
 			if(!listener.onNewData(info)) return false;
 		}
@@ -42,7 +43,7 @@ public abstract class NotifyingWorker implements Runnable {
 		return true;
 	}
 	
-	protected final boolean notifyDataUnique(MP3Info info) {
+	protected final boolean notifyDataUnique(AudioInfo info) {
 		for (IThreadListener listener : listeners) {
 			if(!listener.verifyDataUnique(info)) return false;
 		}
@@ -50,7 +51,7 @@ public abstract class NotifyingWorker implements Runnable {
 		return true;
 	}
 
-	protected final void notifyNewDataError(MP3Info info) {
+	protected final void notifyNewDataError(AudioInfo info) {
 		for (IThreadListener listener : listeners) {
 			listener.onNewDataError(info);
 		}
@@ -60,6 +61,14 @@ public abstract class NotifyingWorker implements Runnable {
 		for(IThreadListener listener : listeners) {
 			listener.singleProcessFinish();
 		}
+	}
+	
+	protected final boolean NotifyaddDataToContainer(ContainerType type, AudioInfo info) {
+		for(IThreadListener listener : listeners) {
+			if(!listener.addDataToContainer(type, info)) return false;
+		}
+		
+		return true;
 	}
 	
 	public NotifyingWorker(String name, ContainerType type) {

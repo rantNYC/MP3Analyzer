@@ -1,12 +1,14 @@
 package com.projects.mp3.controller.engine;
 
-import com.projects.mp3.model.MP3Info;
+import com.projects.mp3.model.AudioInfo;
+import com.projects.mp3.model.ContainerType;
 
 public interface IThreadListener {
 
 	void onThreadFinished(final NotifyingWorker notifyingThread);
-	boolean onNewData(final MP3Info info);
-	boolean verifyDataUnique(final MP3Info info);
-	void onNewDataError(final MP3Info info);
+	boolean addDataToContainer(final ContainerType container, final AudioInfo info);
+	boolean onNewData(final AudioInfo info);
+	boolean verifyDataUnique(final AudioInfo info);
+	void onNewDataError(final AudioInfo info);
 	void singleProcessFinish();
 }

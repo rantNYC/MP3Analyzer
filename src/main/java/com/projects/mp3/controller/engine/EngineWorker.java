@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.projects.mp3.model.ContainerType;
-import com.projects.mp3.model.MP3Info;
+import com.projects.mp3.controller.engine.decoder.Decoder;
+import com.projects.mp3.controller.engine.decoder.IDecoder;
+import com.projects.mp3.model.AudioInfo;
 
 public class EngineWorker extends NotifyingWorker{
 
@@ -34,14 +36,18 @@ public class EngineWorker extends NotifyingWorker{
 				return;
 			}
 			//TODO: Handle millions of rows
-			MP3Decoder decoder = new MP3Decoder(file.getAbsolutePath());
-			MP3Info info = null;
+			IDecoder decoder = new Decoder();
+			AudioInfo info = null;
 			try {
-				info = decoder.decodeInformation();
-				if(notifyNewDataThread(info)) {
-					log.info(String.format("Data %s was sucessfully added", info.toString()));
-				}else {					
-					log.warn(String.format("Data %s already exists", info.toString()));
+				if(decoder.isAudioFile(file)) {
+					info = decoder.decodeInformation(file);
+					if(notifyNewDataThread(info)) {
+						log.info(String.format("Data %s was sucessfully added", info.toString()));
+					}else {					
+						log.warn(String.format("Data %s already exists", info.toString()));
+					}
+				} else {
+					log.warn(String.format("File %s is not an audio type", file));
 				}
 			} catch (Exception e) {
 				log.error("Error decoding: " + file, e);

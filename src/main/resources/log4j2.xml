@@ -16,10 +16,11 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Root level="all">
+    	<Logger name="com.projects.mp3" level="trace" additivity="false">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="GUILog"/>
-            <AppenderRef ref="JavaFXLogger" />
-        </Root>
+        	<AppenderRef ref="GUILog"/>
+        	<AppenderRef ref="JavaFXLogger"/>
+        </Logger>
+        
     </Loggers>
 </Configuration>  
