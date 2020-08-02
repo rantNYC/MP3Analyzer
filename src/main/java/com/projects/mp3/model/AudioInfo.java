@@ -3,24 +3,25 @@ package com.projects.mp3.model;
 public class AudioInfo {
 	
 	@AudioFileAnnotation("Song Name")
-	String songName;
+	private String songName;
 	@AudioFileAnnotation("Artist Name")
-	String artistName;
+	private String artistName;
 	@AudioFileAnnotation("Album Name")
-	String album;
+	private String album;
 	@AudioFileAnnotation("Genre")
-	String genre;
+	private String genre;
 	@AudioFileAnnotation("Bitrate")
-	String bitRate;
+	private String bitRate;
 	@AudioFileAnnotation("Description")
-	String description;
+	private String description;
 	@AudioFileAnnotation("File path")
-	String path;
+	private String localPath;
+
 	
 	@AudioFileAnnotation("Duration")
-	double duration;
+	private double duration;
 	@AudioFileAnnotation("Size(Mb)")
-	double sizeMb;
+	private double sizeMb;
 	
 	public AudioInfo(String songName, String artistName, String album, String genre, 
 					String bitRate,	String path, double duration, double sizeMB) {
@@ -29,7 +30,7 @@ public class AudioInfo {
 		this.album = album;
 		this.genre = genre;
 		this.bitRate = bitRate;
-		this.path = path;
+		this.localPath = path;
 		this.duration = duration;
 		this.sizeMb = sizeMB;
 	}
@@ -62,8 +63,8 @@ public class AudioInfo {
 		return bitRate;
 	}
 
-	public String getPath() {
-		return path;
+	public String getLocalPath() {
+		return localPath;
 	}
 
 	public double getDuration() {
@@ -74,9 +75,18 @@ public class AudioInfo {
 		return sizeMb;
 	}
 
+	public String getRemotePath() {
+		if(getSongName() == null || getSongName().isEmpty()) {
+			throw new IllegalArgumentException("Need song name to get remote path");
+		}
+		//TODO: Remove it and do it per user
+		return String.format("/Songs/Test/%s.file", getSongName());
+	}
+
+	
 	@Override
 	public String toString() {
-		return "AudioInfo [songName=" + songName + ", artistName=" + artistName + ", path=" + path + "]";
+		return "AudioInfo [songName=" + songName + ", artistName=" + artistName + ", path=" + localPath + "]";
 	}
 
 	@Override
@@ -84,7 +94,7 @@ public class AudioInfo {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((artistName == null) ? 0 : artistName.hashCode());
-		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + ((localPath == null) ? 0 : localPath.hashCode());
 		result = prime * result + ((songName == null) ? 0 : songName.hashCode());
 		return result;
 	}
@@ -105,11 +115,11 @@ public class AudioInfo {
 		} else if (!artistName.equals(other.artistName)) {
 			return false;
 		}
-		if (path == null) {
-			if (other.path != null) {
+		if (localPath == null) {
+			if (other.localPath != null) {
 				return false;
 			}
-		} else if (!path.equals(other.path)) {
+		} else if (!localPath.equals(other.localPath)) {
 			return false;
 		}
 		if (songName == null) {
@@ -121,5 +131,6 @@ public class AudioInfo {
 		}
 		return true;
 	}
+
 
 }

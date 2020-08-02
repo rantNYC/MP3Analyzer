@@ -17,6 +17,7 @@ import com.projects.mp3.controller.popup.*;
 import com.projects.mp3.controller.storage.DBAction;
 import com.projects.mp3.controller.storage.DBStatus;
 import com.projects.mp3.controller.storage.DatabaseWorker;
+import com.projects.mp3.controller.storage.dropbox.DropboxAccount;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.AudioFileAnnotation;
@@ -50,6 +51,7 @@ public class MainGUIController {
 
 	private Scene scene;
 	
+	private DropboxAccount account;
 	private MySQLDriver dbDriver;
 	private Engine engine;
 	private final GUIThreadFactory guiFactory = new GUIThreadFactory("GUI Threads");
@@ -122,6 +124,8 @@ public class MainGUIController {
 	@FXML
 	public void initialize() {
 		log.info("Initializing Main GUI and fetching DB...");
+		
+		account = new DropboxAccount();
 		scene = this.startButton.getScene();
 		folderTable.getColumns().setAll(getAudioInfoColumns());
 		dbTable.getColumns().setAll(getAudioInfoColumns());
@@ -154,7 +158,7 @@ public class MainGUIController {
 	@FXML
 	public void onRefreshHandle() {
 		resetStats();
-		NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Refresh, null);
+		NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Refresh, null, account);
 		ControllerListener viewerListener = new ControllerListener(this, worker, container);
 		container.dropContainerInfo(ContainerType.DBContainer);
 		viewerListener.refreshDBViewer();
@@ -310,7 +314,7 @@ public class MainGUIController {
 		File path = new File(rootPath);
 		if(path.exists() && path.isDirectory()) {
 			engine = new Engine(path);
-			DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, engine.getAllFiles());
+			DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, engine.getAllFiles(), account);
 			ControllerListener viewerListener = new ControllerListener(this, worker, container);
 			viewerListener.setTotal(engine.getNumFiles());
 			worker.addListener(viewerListener);
@@ -330,7 +334,7 @@ public class MainGUIController {
 			warn.displayPopUp("Warning", "Databased Disconnected", "Please login to the database to start this action");
 		}
 		numDBFilesLabel.setText(container.getSizeContainer(ContainerType.DBContainer)+"");
-		NotifyingWorker worker = new DatabaseWorker("DBContainer", dbDriver, DBAction.Fetch, null);
+		NotifyingWorker worker = new DatabaseWorker("DBContainer", dbDriver, DBAction.Fetch, null, account);
 		ListenerWorker viewerListener = new ControllerListener(this, worker, container);
 		worker.addListener(viewerListener);
 		service.execute(viewerListener);

@@ -54,6 +54,8 @@ public class ControllerListener extends ListenerWorker {
 	@Override
 	public void onThreadFinished(NotifyingWorker notifyingThread) {
 		if(shouldEnableButton) controller.enableStartButton();
+		double timer = ++counter/total;
+		controller.runThreadSafe(() -> controller.setProgressBar(timer));
 		controller.runThreadSafe(() -> controller.setNumDBFiles(container.getSizeContainer(ContainerType.DBContainer)));
 		controller.runThreadSafe(() -> controller.setNumRootFiles(container.getSizeContainer(ContainerType.FolderContainer)));
 	}
@@ -78,12 +80,6 @@ public class ControllerListener extends ListenerWorker {
 	public void executeLogic() {
 		//Don't disable button if this is called
 		shouldEnableButton = false;
-	}
-
-	@Override
-	public void singleProcessFinish() {
-		double timer = ++counter/total;
-		controller.runThreadSafe(() -> controller.setProgressBar(timer));
 	}
 
 	@Override

@@ -70,7 +70,7 @@ public class Decoder implements IDecoder{
 	
 	@Override
 	public AudioInfo parseFileName(AudioInfo audioInfo) {
-		String fileName = new File(audioInfo.getPath()).getName();
+		String fileName = new File(audioInfo.getLocalPath()).getName();
 		//TODO: Maybe have a file with known parsers?
 		//TODO: Faster pre-compile all possible patterns
 		Pattern pattern = Pattern.compile("(.+?)(?=-).(.+?)(?=\\(|\\[)");
@@ -79,7 +79,7 @@ public class Decoder implements IDecoder{
 			String songName = matcher.group(2);
 			String artistName = matcher.group(1);
 			return new AudioInfo(songName == null ? null : songName.trim(), artistName == null ? null : artistName.trim(),
-									audioInfo.getAlbum(), audioInfo.getGenre(),	audioInfo.getBitRate(), audioInfo.getPath(), audioInfo.getDuration(), audioInfo.getSizeMb());
+									audioInfo.getAlbum(), audioInfo.getGenre(),	audioInfo.getBitRate(), audioInfo.getLocalPath(), audioInfo.getDuration(), audioInfo.getSizeMb());
 		}
 		
 		return audioInfo;

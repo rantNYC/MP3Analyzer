@@ -57,12 +57,6 @@ public abstract class NotifyingWorker implements Runnable {
 		}
 	}
 	
-	protected final void notifySingleProcessFinish() {
-		for(IThreadListener listener : listeners) {
-			listener.singleProcessFinish();
-		}
-	}
-	
 	protected final boolean NotifyaddDataToContainer(ContainerType type, AudioInfo info) {
 		for(IThreadListener listener : listeners) {
 			if(!listener.addDataToContainer(type, info)) return false;

@@ -1,5 +1,7 @@
 package com.projects.mp3.controller.storage;
 
+import static com.projects.mp3.controller.engine.EngineUtilities.isNullorEmpty;
+
 import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
@@ -9,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.projects.mp3.controller.engine.NotifyingWorker;
 import com.projects.mp3.controller.engine.decoder.Decoder;
 import com.projects.mp3.controller.engine.decoder.IDecoder;
+import com.projects.mp3.controller.storage.dropbox.DropboxAccount;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.AudioInfo;
@@ -23,13 +26,16 @@ public class DatabaseWorker extends NotifyingWorker {
 	private DBAction action;
 	private List<File> mp3Files;
 	private boolean parseFileNameifInfoNull = false;
+	private DropboxAccount account;
 	
-	public DatabaseWorker(String name, MySQLDriver driver, DBAction action, List<File> mp3Files) {
+	public DatabaseWorker(String name, MySQLDriver driver, DBAction action, List<File> mp3Files,
+							DropboxAccount account) {
 		super(name, ContainerType.DBContainer);
 		if(driver == null) throw new IllegalArgumentException("DB driver cannot be null");
 		this.driver = driver;
 		this.action = action;
 		this.mp3Files = mp3Files;
+		this.account = account;
 	}
 
 	public void setEnableFileNameParsing(boolean enableFileNameParsing) {
@@ -62,13 +68,14 @@ public class DatabaseWorker extends NotifyingWorker {
 			return;
 		}
 
+		//TODO: Send whole collection to a worker thread where they all run in parallel
+		//based on queues
 		for(File file : mp3Files) {
 			if(Thread.currentThread().isInterrupted()) {
 				log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
 				this.interrupt();
 				return;
 			}
-			//TODO: Handle millions of rows
 			IDecoder decoder = new Decoder();
 			AudioInfo info = null;
 			try {
@@ -82,10 +89,12 @@ public class DatabaseWorker extends NotifyingWorker {
 												info.toString(),ContainerType.FolderContainer));
 					}
 					if(notifyDataUnique(info)) {
-						if(info.getSongName() == null && info.getArtistName() == null &&
+						if(isNullorEmpty(info.getSongName()) || isNullorEmpty(info.getArtistName()) &&
 								parseFileNameifInfoNull) {
 							info = decoder.parseFileName(info);
 						}
+						
+						account.uploadFileToRemote(info);
 						driver.insertMP3ToDB(info);
 						notifyNewDataThread(info);
 					}
@@ -98,9 +107,7 @@ public class DatabaseWorker extends NotifyingWorker {
 			} catch (Exception e) {
 				notifyNewDataError(info);
 				log.error("Error processing: " + file, e);
-			} finally {
-				notifySingleProcessFinish();
-			}
+			} 
 		}
 	}
 

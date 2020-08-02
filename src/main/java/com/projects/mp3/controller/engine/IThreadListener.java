@@ -10,5 +10,4 @@ public interface IThreadListener {
 	boolean onNewData(final AudioInfo info);
 	boolean verifyDataUnique(final AudioInfo info);
 	void onNewDataError(final AudioInfo info);
-	void singleProcessFinish();
 }

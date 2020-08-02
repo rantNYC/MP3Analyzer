@@ -44,7 +44,7 @@ public class MySQLDriver {
 			statement.setString(4, AudioInfo.getGenre());
 			statement.setString(5, AudioInfo.getBitRate());
 			statement.setString(6, AudioInfo.getDescription());
-			statement.setString(7, AudioInfo.getPath());
+			statement.setString(7, AudioInfo.getLocalPath());
 			statement.setDouble(8, AudioInfo.getDuration());
 			statement.setDouble(9, AudioInfo.getSizeMb());
 			//			printConsole(statement);
