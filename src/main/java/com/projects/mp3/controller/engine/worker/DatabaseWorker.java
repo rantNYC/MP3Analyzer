@@ -1,22 +1,25 @@
-package com.projects.mp3.controller.storage;
+package com.projects.mp3.controller.engine.worker;
 
-import static com.projects.mp3.controller.engine.EngineUtilities.isNullorEmpty;
+import static com.projects.mp3.controller.engine.utilities.EngineUtilities.isNullorEmpty;
+import static com.projects.mp3.controller.engine.utilities.EngineThread.runThreads;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.projects.mp3.controller.engine.NotifyingWorker;
 import com.projects.mp3.controller.engine.decoder.Decoder;
 import com.projects.mp3.controller.engine.decoder.IDecoder;
+import com.projects.mp3.controller.storage.DBAction;
 import com.projects.mp3.controller.storage.dropbox.DropboxAccount;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.model.AudioInfo;
 
-public class DatabaseWorker extends NotifyingWorker {
+public class DatabaseWorker extends EngineWorker {
 
 	private static final Logger log = LoggerFactory.getLogger(DatabaseWorker.class);
 
@@ -68,47 +71,23 @@ public class DatabaseWorker extends NotifyingWorker {
 			return;
 		}
 
+		if(Thread.currentThread().isInterrupted()) {
+			log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
+			this.interrupt();
+			return;
+		}
+		
 		//TODO: Send whole collection to a worker thread where they all run in parallel
 		//based on queues
+		Collection<Runnable> uploaders = new ArrayList<>();
 		for(File file : mp3Files) {
-			if(Thread.currentThread().isInterrupted()) {
-				log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
-				this.interrupt();
-				return;
-			}
-			IDecoder decoder = new Decoder();
-			AudioInfo info = null;
-			try {
-				if(decoder.isAudioFile(file)) {
-					info = decoder.decodeInformation(file);
-					if(NotifyaddDataToContainer(ContainerType.FolderContainer, info)) {
-						log.info(String.format("Data %s was sucessfully added to %s", 
-												info.toString(),ContainerType.FolderContainer));
-					}else {					
-						log.warn(String.format("Data %s already exists in %s", 
-												info.toString(),ContainerType.FolderContainer));
-					}
-					if(notifyDataUnique(info)) {
-						if(isNullorEmpty(info.getSongName()) || isNullorEmpty(info.getArtistName()) &&
-								parseFileNameifInfoNull) {
-							info = decoder.parseFileName(info);
-						}
-						
-						account.uploadFileToRemote(info);
-						driver.insertMP3ToDB(info);
-						notifyNewDataThread(info);
-					}
-					else {
-						log.warn(String.format("Data %s already in %s", info, type));
-					}
-				} else {
-					log.warn(String.format("File %s is not an audio type", file));
-				}
-			} catch (Exception e) {
-				notifyNewDataError(info);
-				log.error("Error processing: " + file, e);
-			} 
+			RemoteUploader uploader = new RemoteUploader(file.getName(), type, file);
+			uploader.setListener(listener);
+			uploaders.add(uploader);
 		}
+		notifyDisableLogic();
+		runThreads(uploaders, false, 3);
+		notifyEnableLogic();
 	}
 
 	private void executeFetching() throws SQLException {
@@ -126,4 +105,58 @@ public class DatabaseWorker extends NotifyingWorker {
 		}
 	}
 
+	private class RemoteUploader extends EngineWorker{
+
+		private File file;
+		
+		public RemoteUploader(String name, ContainerType type, File file) {
+			super(name, type);
+			this.file = file;
+		}
+
+		@Override
+		public void execute() {
+			if(Thread.currentThread().isInterrupted()) {
+				log.info(String.format("%s was interrupted", Thread.currentThread().getName()));
+				this.interrupt();
+				return;
+			}
+			IDecoder decoder = new Decoder();
+			AudioInfo info = null;
+			try {
+				if(decoder.isAudioFile(file)) {
+					info = decoder.decodeInformation(file);
+					if(notifyaddDataToContainer(ContainerType.FolderContainer, info)) {
+						log.info(String.format("Data %s was sucessfully added to %s", 
+												info.toString(),ContainerType.FolderContainer));
+					}else {					
+						log.warn(String.format("Data %s already exists in %s", 
+												info.toString(),ContainerType.FolderContainer));
+					}
+					if(notifyDataUnique(info)) {
+						if(isNullorEmpty(info.getSongName()) || isNullorEmpty(info.getArtistName()) &&
+								parseFileNameifInfoNull) {
+							info = decoder.parseFileName(info);
+						}
+						
+						account.uploadFileToRemote(info);
+						driver.insertMP3ToDB(info);
+						notifyNewDataThread(info);
+					}
+					else {
+						notifyNewDataError(info);
+						log.warn(String.format("Data %s already in %s", info, type));
+					}
+				} else {
+					notifyNewDataError(info);
+					log.warn(String.format("File %s is not an audio type", file));
+				}
+			} catch (Exception e) {
+				notifyNewDataError(info);
+				log.error("Error processing: " + file, e);
+			} 
+		}
+		
+	}
+	
 }

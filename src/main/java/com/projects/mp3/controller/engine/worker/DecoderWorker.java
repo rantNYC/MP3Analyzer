@@ -1,4 +1,4 @@
-package com.projects.mp3.controller.engine;
+package com.projects.mp3.controller.engine.worker;
 
 import java.io.File;
 import java.util.*	;
@@ -11,14 +11,14 @@ import com.projects.mp3.controller.engine.decoder.Decoder;
 import com.projects.mp3.controller.engine.decoder.IDecoder;
 import com.projects.mp3.model.AudioInfo;
 
-public class EngineWorker extends NotifyingWorker{
+public class DecoderWorker extends EngineWorker{
 
-	private static final Logger log = LoggerFactory.getLogger(EngineWorker.class);
+	private static final Logger log = LoggerFactory.getLogger(DecoderWorker.class);
 	
 	private final List<File> mp3Files;
 //	private final Engine engine;
 	
-	public EngineWorker(String name, final List<File> mp3Files) {
+	public DecoderWorker(String name, final List<File> mp3Files) {
 		super(name, ContainerType.FolderContainer);
 		this.mp3Files = mp3Files;
 	}

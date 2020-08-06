@@ -1,22 +1,27 @@
 package com.projects.mp3.controller;
 
+import static com.projects.mp3.controller.engine.utilities.EngineUtilities.isNullorEmpty;
+import static com.projects.mp3.controller.engine.utilities.EngineThread.createExecutor;
+
 import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.projects.mp3.controller.engine.*;
+import com.projects.mp3.controller.engine.Engine;
+import com.projects.mp3.controller.engine.worker.ControllerListener;
+import com.projects.mp3.controller.engine.worker.DatabaseWorker;
+import com.projects.mp3.controller.engine.worker.ListenerWorker;
+import com.projects.mp3.controller.engine.worker.EngineWorker;
 import com.projects.mp3.controller.popup.*;
 import com.projects.mp3.controller.storage.DBAction;
 import com.projects.mp3.controller.storage.DBStatus;
-import com.projects.mp3.controller.storage.DatabaseWorker;
 import com.projects.mp3.controller.storage.dropbox.DropboxAccount;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.model.ContainerType;
@@ -54,8 +59,7 @@ public class MainGUIController {
 	private DropboxAccount account;
 	private MySQLDriver dbDriver;
 	private Engine engine;
-	private final GUIThreadFactory guiFactory = new GUIThreadFactory("GUI Threads");
-	private ExecutorService service = Executors.newFixedThreadPool(10, guiFactory);
+	private ExecutorService service = createExecutor(5, "GUI Threads");
 	private SynchronizedDataContainer container = new SynchronizedDataContainer();
 
 	private ObservableList<String> logger = FXCollections.observableArrayList();
@@ -158,11 +162,11 @@ public class MainGUIController {
 	@FXML
 	public void onRefreshHandle() {
 		resetStats();
-		NotifyingWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Refresh, null, account);
+		EngineWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Refresh, null, account);
 		ControllerListener viewerListener = new ControllerListener(this, worker, container);
 		container.dropContainerInfo(ContainerType.DBContainer);
 		viewerListener.refreshDBViewer();
-		worker.addListener(viewerListener);
+		worker.setListener(viewerListener);
 		service.execute(viewerListener);
 	}
 	
@@ -170,7 +174,7 @@ public class MainGUIController {
 	public void onStopHandle() throws InterruptedException {
 		service.shutdownNow();
 		service.awaitTermination(5, TimeUnit.SECONDS);
-		service = Executors.newFixedThreadPool(10, guiFactory);
+		service = createExecutor(5, "GUI Threads");
 		log.info("Program Stopped...");
 	}
 
@@ -178,7 +182,7 @@ public class MainGUIController {
 	public void chooseRootFolder() {
 		DirectoryChooser dc = new DirectoryChooser();
 
-		if(!EngineUtilities.isNullorEmpty(rootFolder.getText())) {
+		if(!isNullorEmpty(rootFolder.getText())) {
 			dc.setInitialDirectory(new File(rootFolder.getText()));
 		} else {
 			dc.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -215,7 +219,7 @@ public class MainGUIController {
 	}
 	
 	public Node lookup(String name) {
-		if(EngineUtilities.isNullorEmpty(name)) return null;
+		if(isNullorEmpty(name)) return null;
 		if(scene == null) return null;
 		
 		return scene.lookup(name);
@@ -305,7 +309,7 @@ public class MainGUIController {
 		}
 		
 		String rootPath = rootFolder.getText();
-		if(EngineUtilities.isNullorEmpty(rootPath)) {
+		if(isNullorEmpty(rootPath)) {
 			PopupMessageError popup = new PopupMessageError();
 			popup.displayPopUp("Root Folder", "Folder Error", "Select a root folder first");
 			return null;
@@ -317,7 +321,7 @@ public class MainGUIController {
 			DatabaseWorker worker = new DatabaseWorker(ContainerType.DBContainer.toString(), dbDriver, DBAction.Upload, engine.getAllFiles(), account);
 			ControllerListener viewerListener = new ControllerListener(this, worker, container);
 			viewerListener.setTotal(engine.getNumFiles());
-			worker.addListener(viewerListener);
+			worker.setListener(viewerListener);
 			worker.setEnableFileNameParsing(enableNameParsingCheckBox.isSelected());
 			return viewerListener;
 		}else {
@@ -334,9 +338,9 @@ public class MainGUIController {
 			warn.displayPopUp("Warning", "Databased Disconnected", "Please login to the database to start this action");
 		}
 		numDBFilesLabel.setText(container.getSizeContainer(ContainerType.DBContainer)+"");
-		NotifyingWorker worker = new DatabaseWorker("DBContainer", dbDriver, DBAction.Fetch, null, account);
+		EngineWorker worker = new DatabaseWorker("DBContainer", dbDriver, DBAction.Fetch, null, account);
 		ListenerWorker viewerListener = new ControllerListener(this, worker, container);
-		worker.addListener(viewerListener);
+		worker.setListener(viewerListener);
 		service.execute(viewerListener);
 	}
 

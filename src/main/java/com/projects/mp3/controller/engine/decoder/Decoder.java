@@ -1,5 +1,8 @@
 package com.projects.mp3.controller.engine.decoder;
 
+import static com.projects.mp3.controller.engine.utilities.EngineUtilities.MILISECONDS_TO_MINUTE;
+import static com.projects.mp3.controller.engine.utilities.EngineUtilities.BYTES_TO_MEGABYTES;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.regex.Matcher;
@@ -15,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 
-import com.projects.mp3.controller.engine.EngineUtilities;
 import com.projects.mp3.model.AudioInfo;
 
 public class Decoder implements IDecoder{
@@ -58,10 +60,10 @@ public class Decoder implements IDecoder{
 		try {
 			inputstream = new FileInputStream(audioFile);
 			parser.parse(inputstream, handler, metadata, context);
-			double durationMinutes = Math.floor(Double.parseDouble(metadata.get("xmpDM:duration") == null ? "0" : metadata.get("xmpDM:duration"))/EngineUtilities.MILISECONDS_TO_MINUTE * 100) / 100;
+			double durationMinutes = Math.floor(Double.parseDouble(metadata.get("xmpDM:duration") == null ? "0" : metadata.get("xmpDM:duration"))/MILISECONDS_TO_MINUTE * 100) / 100;
 			return new AudioInfo(metadata.get("title"), metadata.get("xmpDM:artist"), metadata.get("xmpDM:album"), 
 							   metadata.get("xmpDM:genre"), metadata.get("xmpDM:audioSampleRate"), audioFile.getAbsolutePath(),
-							   durationMinutes, audioFile.length()/EngineUtilities.BYTES_TO_MEGABYTES);
+							   durationMinutes, audioFile.length()/BYTES_TO_MEGABYTES);
 		} finally {
 			if(inputstream != null) inputstream.close();
 			log.info("Finished processing file: " + audioFile.getAbsolutePath());

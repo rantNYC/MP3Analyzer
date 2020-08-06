@@ -1,10 +1,11 @@
 package com.projects.mp3.controller;
 
+import static com.projects.mp3.controller.engine.utilities.EngineUtilities.isNullorEmpty;
+
 import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.projects.mp3.controller.engine.EngineUtilities;
 import com.projects.mp3.controller.popup.PopupMessageError;
 import com.projects.mp3.controller.storage.mysql.MySQLDriver;
 import com.projects.mp3.view.stages.MainGUIStage;
@@ -53,19 +54,19 @@ public class LoginController {
 		String username = dbUsername.getText();
 		String password = dbPassword.getText();
 
-		if(EngineUtilities.isNullorEmpty(connection)) {
+		if(isNullorEmpty(connection)) {
 			PopupMessageError popUp = new PopupMessageError();
 			popUp.displayPopUp("DB Error", "Connection Error", "Database url cannot be empty");
 			return;
 		}
 
-		if(EngineUtilities.isNullorEmpty(username)) {
+		if(isNullorEmpty(username)) {
 			PopupMessageError popUp = new PopupMessageError();
 			popUp.displayPopUp("DB Error", "Username Error", "User cannot be empty");
 			return;
 		}
 
-		if(EngineUtilities.isNullorEmpty(password)) {
+		if(isNullorEmpty(password)) {
 			PopupMessageError popUp = new PopupMessageError();
 			popUp.displayPopUp("DB Error", "Password Error", "Password cannot be empty");
 			return;

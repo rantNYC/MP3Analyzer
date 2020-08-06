@@ -1,5 +1,8 @@
 package com.projects.mp3.model;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 public class AudioInfo {
 	
 	@AudioFileAnnotation("Song Name")
@@ -75,12 +78,14 @@ public class AudioInfo {
 		return sizeMb;
 	}
 
-	public String getRemotePath() {
+	public String getRemotePath() throws Exception {
+		//Need to encode remote path
 		if(getSongName() == null || getSongName().isEmpty()) {
 			throw new IllegalArgumentException("Need song name to get remote path");
 		}
 		//TODO: Remove it and do it per user
-		return String.format("/Songs/Test/%s.file", getSongName());
+    	String encodedSongName = URLEncoder.encode(getSongName(), StandardCharsets.UTF_8.name());
+		return String.format("/Songs/Test/%s.file", encodedSongName);
 	}
 
 	

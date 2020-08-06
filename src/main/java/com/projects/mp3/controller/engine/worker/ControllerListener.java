@@ -1,11 +1,11 @@
-package com.projects.mp3.controller.engine;
+package com.projects.mp3.controller.engine.worker;
 
 import com.projects.mp3.model.ContainerType;
 import com.projects.mp3.controller.MainGUIController;
 import com.projects.mp3.model.AudioInfo;
 import com.projects.mp3.model.SynchronizedDataContainer;
 
-public class ControllerListener extends ListenerWorker {
+public class ControllerListener extends ContainerListener {
 
 	private boolean shouldEnableButton = true;
 	
@@ -16,7 +16,7 @@ public class ControllerListener extends ListenerWorker {
 	private double total;
 	
 	public ControllerListener(MainGUIController controller,
-								NotifyingWorker worker, SynchronizedDataContainer container) {
+								EngineWorker worker, SynchronizedDataContainer container) {
 		super(worker, container);
 		if(controller == null) throw new IllegalArgumentException("Controller cannot be null");
 		this.controller = controller;
@@ -41,54 +41,49 @@ public class ControllerListener extends ListenerWorker {
 	
 	@Override
 	public boolean onNewData(AudioInfo info) {
-		controller.runThreadSafe(() -> controller.setSuccessLabel(++successCounter));
-		
-		if(container.addDataToContainer(worker.type, info)) {
+		if(super.onNewData(info)) {
 			controller.setDBTableInfo(info);
+			controller.runThreadSafe(() -> controller.setSuccessLabel(++successCounter));
 			return true;
-		} else {
-			return false;
 		}
+		
+		return false;
 	}
 	
 	@Override
-	public void onThreadFinished(NotifyingWorker notifyingThread) {
+	public void onThreadFinished(EngineWorker notifyingThread) {
 		if(shouldEnableButton) controller.enableStartButton();
 		double timer = ++counter/total;
 		controller.runThreadSafe(() -> controller.setProgressBar(timer));
 		controller.runThreadSafe(() -> controller.setNumDBFiles(container.getSizeContainer(ContainerType.DBContainer)));
 		controller.runThreadSafe(() -> controller.setNumRootFiles(container.getSizeContainer(ContainerType.FolderContainer)));
 	}
-	
-	@Override
-	public boolean verifyDataUnique(AudioInfo info) {
-		if(container.containsDataInContainer(worker.type, info) ||
-				container.containsDataInContainer(ContainerType.OrphanContainer, info)) {
-			return false;
-		}
-
-		return true;
-	}
 
 	@Override
 	public void onNewDataError(AudioInfo info) {
-		container.addDataToContainer(ContainerType.OrphanContainer, info);
+		super.onNewDataError(info);
 		controller.runThreadSafe(() -> controller.setFailedLabel(++failCounter));
 	}
 	
 	@Override
-	public void executeLogic() {
+	public void disableLogic() {
 		//Don't disable button if this is called
 		shouldEnableButton = false;
+	}
+	
+	@Override
+	public void enableLogic() {
+		//Don't disable button if this is called
+		shouldEnableButton = true;
 	}
 
 	@Override
 	public boolean addDataToContainer(ContainerType type, AudioInfo info) {
-		if(container.addDataToContainer(type, info)) {
+		if(super.addDataToContainer(type, info)) {
 			controller.setFolderTableInfo(info);
 			return true;
-		}else {
-			return false;
 		}
+		
+		return false;
 	}
 }

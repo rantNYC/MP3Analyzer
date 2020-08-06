@@ -1,5 +1,8 @@
 package com.projects.mp3.controller.storage.mysql;
 
+import static com.projects.mp3.controller.engine.utilities.EngineUtilities.isNullorEmpty;
+import static com.projects.mp3.controller.engine.utilities.EngineUtilities.TIMEOUT_SECONDS;
+
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,7 +11,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.projects.mp3.controller.engine.EngineUtilities;
 import com.projects.mp3.controller.storage.DBStatus;
 import com.projects.mp3.model.AudioInfo;
 
@@ -33,11 +35,11 @@ public class MySQLDriver {
 	}
 
 	public void insertMP3ToDB(AudioInfo AudioInfo) throws SQLException {
-		if(EngineUtilities.isNullorEmpty(AudioInfo.getSongName()) || EngineUtilities.isNullorEmpty(AudioInfo.getArtistName())) 
+		if(isNullorEmpty(AudioInfo.getSongName()) || isNullorEmpty(AudioInfo.getArtistName())) 
 			throw new IllegalArgumentException(String.format("%s contains null for primary keys", AudioInfo));
 
 		try (CallableStatement statement = conn.prepareCall("{call insert_info(?, ?, ? , ?, ?, ?, ?, ?, ?)}")){
-			statement.setQueryTimeout(EngineUtilities.TIMEOUT_SECONDS);
+			statement.setQueryTimeout(TIMEOUT_SECONDS);
 			statement.setString(1, AudioInfo.getSongName());
 			statement.setString(2, AudioInfo.getArtistName());
 			statement.setString(3, AudioInfo.getAlbum());
@@ -57,7 +59,7 @@ public class MySQLDriver {
 	public List<AudioInfo> getAllDataInDB() throws SQLException{
 		List<AudioInfo> data = new ArrayList<AudioInfo>();
 		try (CallableStatement statement = conn.prepareCall("{call select_all_info}")){
-			statement.setQueryTimeout(EngineUtilities.TIMEOUT_SECONDS);
+			statement.setQueryTimeout(TIMEOUT_SECONDS);
 
 			ResultSet rs = statement.executeQuery();
 			while(rs.next()) {
